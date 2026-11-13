@@ -27,6 +27,10 @@ fn main() {
 
 fn read<T>(path: &std::path::Path, fallback: &str, parse: impl Fn(&str) -> Result<T, String>) -> Option<T> {
     println!("cargo::rerun-if-changed={}", path.display());
+    // Lusk Diapo ships without the Lusk Diapo contributor tables: a missing file is expected.
+    if !path.exists() {
+        return None;
+    }
     let r = std::fs::read_to_string(path).map_err(|e| e.to_string()).and_then(|t| parse(&t));
     if let Err(e) = &r {
         println!("cargo::warning={}: {e}; {fallback}", path.display());

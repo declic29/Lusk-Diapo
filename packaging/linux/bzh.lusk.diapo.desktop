@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Name=Lusk Diapo
+GenericName=Présentation
+Comment=Créer et présenter des diaporamas
+Exec=deckcraft %F
+TryExec=deckcraft
+Icon=bzh.lusk.diapo
+Terminal=false
+StartupNotify=true
+StartupWMClass=bzh.lusk.diapo
+Categories=Office;Presentation;
+MimeType=application/x-deckcraft;application/vnd.openxmlformats-officedocument.presentationml.presentation;application/vnd.openxmlformats-officedocument.presentationml.template;application/vnd.openxmlformats-officedocument.presentationml.slideshow;
+Keywords=présentation;diaporama;diapo;presentation;slides;slide show;deck;pptx;keynote;powerpoint;

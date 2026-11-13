@@ -15,6 +15,7 @@ deckcraft-model = { workspace = true }
 deckcraft-fonts = { workspace = true }
 deckcraft-text = { workspace = true }
 deckcraft-render = { workspace = true }
+image = { workspace = true }
 deckcraft-anim = { workspace = true }
 deckcraft-engine = { workspace = true }
 deckcraft-media = { workspace = true }

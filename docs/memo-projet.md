@@ -16,12 +16,18 @@
 
 - 13 novembre 2026 : orange Lusk #F77C32 dans l'interface (accent clair et sombre, onglets
   contextuels, repères, icônes, À propos) et dans le thème de présentation intégré.
+- 13 novembre 2026 : ménage du dépôt (documents et workflows de la suite Craft, contributeurs,
+  marques ArtCraft, captures DeckCraft ; Dependabot mensuel, corrections seulement ; ligne Lusk
+  dans LICENSE-MIT). Marque : logo fourni par l'association (`assets/app-icon/lusk-diapo-logo.png`)
+  et icône tirée des trois cartes avec le « D » (`lusk-diapo-icone.png`, `packaging/icons.sh`) ;
+  identifiant `bzh.lusk.diapo` ; nom Lusk Diapo partout dans l'interface (le thème intégré
+  s'appelle aussi « Lusk Diapo ») ; À propos avec le logo, en français ; liens vers lusk.bzh et le
+  dépôt ; module de mise à jour réglé sur `declic29/Lusk-Diapo` (fichiers `Lusk-Diapo-…`,
+  éditeur Lusk, orange #F77C32) ; README, NOTICE, ATTRIBUTION en français.
 
 ## À faire (dans l'ordre du cahier des charges)
 
-1. Ménage du dépôt (workflows de la suite Craft, Dependabot limité aux corrections, licence).
-2. Marque : nom Lusk Diapo, identifiant `bzh.lusk.diapo`, éditeur Lusk, logo et icônes, À propos,
-   écran d'accueil animé, README, NOTICE, ATTRIBUTION.
+2. Marque, suite : écran d'accueil animé (comme Lusk Tab), fond d'écran d'accueil à fournir.
 3. Français : catalogue complet, région française, modèles et thèmes, palette de commandes.
 4. Dictionnaires français, breton, anglais et synonymes (de Lusk Texte).
 5. Pages de Fichier (Accueil avec le renard, Ouvrir / Enregistrer sous avec OneDrive et Google

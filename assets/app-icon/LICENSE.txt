@@ -1,0 +1,7 @@
+Logo et icône de Lusk Diapo (lusk-diapo-logo.png, lusk-diapo-icone.png et tous les fichiers qui
+en sont tirés dans ce dossier : deckcraft-1024.png, deckcraft.icns, deckcraft.ico, hicolor/).
+
+Le logo appartient à l'association Lusk (loi 1901), qui en autorise l'utilisation et la
+redistribution avec Lusk Diapo. Il n'est pas couvert par les licences MIT et Apache du code.
+
+Les fichiers dérivés se régénèrent avec packaging/icons.sh.

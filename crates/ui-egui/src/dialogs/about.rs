@@ -1,4 +1,4 @@
-use super::{Color32, CornerRadius, Rect, Sense, SlideApp, Stroke, Tokens, Ui, pos2, theme, vec2};
+use super::{Color32, Rect, Sense, SlideApp, Tokens, Ui, pos2, theme, vec2};
 
 /// Room the About credits need for their table; the About tab keeps its compact size.
 pub(super) const CREDITS_SIZE: egui::Vec2 = vec2(820.0, 380.0);
@@ -18,19 +18,19 @@ pub(super) fn credits_block(ui: &mut Ui, models: bool) -> Rect {
 pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     ui.vertical_centered(|ui| {
-        let (r, _) = ui.allocate_exact_size(vec2(64.0, 64.0), Sense::hover());
-        paint_logo(ui.painter(), r);
-        ui.label(egui::RichText::new("DeckCraft").font(theme::bold(22.0)));
+        let (r, _) = ui.allocate_exact_size(vec2(220.0, 127.0), Sense::hover());
+        paint_wordmark(ui.painter(), r);
+        ui.label(egui::RichText::new("Lusk Diapo").font(theme::bold(22.0)));
         ui.label(egui::RichText::new(version_line()).color(t.text_dim));
         ui.add_space(6.0);
-        ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
-        ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
+        ui.label("Présentations et diaporamas, libre et gratuit, porté par l'association Lusk (loi 1901).");
+        ui.label("Logiciel libre, sans lien avec Microsoft.");
         ui.add_space(6.0);
-        ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
-        ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
-        ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+        ui.hyperlink_to("lusk.bzh", deckcraft_engine::links::WEBSITE);
+        ui.hyperlink_to("github.com/declic29/Lusk-Diapo", deckcraft_engine::links::GITHUB);
         ui.add_space(6.0);
-        ui.label(egui::RichText::new("MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors").size(11.0).color(t.text_faint));
+        ui.label(egui::RichText::new("© 2026 Lusk. Licence MIT ou Apache 2.0.").size(11.0).color(t.text_faint));
+        ui.label(egui::RichText::new("Dérivé de DeckCraft, © 2026 ArtCraft Team and the DeckCraft contributors.").size(11.0).color(t.text_faint));
     });
 }
 
@@ -49,20 +49,43 @@ pub fn version_line() -> String {
     s
 }
 
-/// DeckCraft's mark, drawn in code: a slide card with a play triangle in our orange.
+/// Lusk Diapo's mark: the three stacked cards with the « D » of the Lusk Diapo logo
+/// (`assets/app-icon/hicolor/256x256/apps/bzh.lusk.diapo.png`), square in the middle of `r`.
 pub fn paint_logo(p: &egui::Painter, r: Rect) {
-    let orange = Color32::from_rgb(0xF7, 0x7C, 0x32);
-    let deep = Color32::from_rgb(0xC2, 0x4E, 0x14);
-    let card = r.shrink(r.width() * 0.08);
-    p.rect_filled(card.translate(vec2(r.width() * 0.04, r.width() * 0.05)), CornerRadius::same((r.width() * 0.14) as u8), deep);
-    p.rect_filled(card, CornerRadius::same((r.width() * 0.14) as u8), orange);
-    let c = card.center();
-    let s = card.width() * 0.22;
-    p.add(egui::Shape::convex_polygon(
-        vec![pos2(c.x - s * 0.7, c.y - s), pos2(c.x + s, c.y), pos2(c.x - s * 0.7, c.y + s)],
-        Color32::WHITE,
-        Stroke::NONE,
-    ));
+    let side = r.width().min(r.height());
+    paint_png(
+        p,
+        "lusk_diapo_icon",
+        include_bytes!("../../../../assets/app-icon/hicolor/256x256/apps/bzh.lusk.diapo.png"),
+        Rect::from_center_size(r.center(), vec2(side, side)),
+    );
+}
+
+/// The whole Lusk Diapo logo, cards and « Diapo » (`assets/app-icon/lusk-diapo-logo.png`), fitted
+/// in the middle of `r` with its proportions kept.
+pub fn paint_wordmark(p: &egui::Painter, r: Rect) {
+    paint_png(p, "lusk_diapo_logo", include_bytes!("../../../../assets/app-icon/lusk-diapo-logo.png"), r);
+}
+
+/// Draws an embedded PNG fitted in `r` (proportions kept). The texture is decoded once per name.
+fn paint_png(p: &egui::Painter, name: &'static str, png: &'static [u8], r: Rect) {
+    let ctx = p.ctx();
+    let id = egui::Id::unique(("lusk_png", name));
+    let tex = ctx.data(|d| d.get_temp::<egui::TextureHandle>(id)).unwrap_or_else(|| {
+        let img =
+            image::load_from_memory(png).map(|i| i.to_rgba8()).unwrap_or_else(|_| image::RgbaImage::from_pixel(1, 1, image::Rgba([0, 0, 0, 0])));
+        let tex = ctx.load_texture(
+            name,
+            egui::ColorImage::from_rgba_unmultiplied([img.width() as usize, img.height() as usize], img.as_raw()),
+            egui::TextureOptions::LINEAR,
+        );
+        ctx.data_mut(|d| d.insert_temp(id, tex.clone()));
+        tex
+    });
+    let [w, h] = tex.size().map(|v| v.max(1) as f32);
+    let scale = (r.width() / w).min(r.height() / h);
+    let dest = Rect::from_center_size(r.center(), vec2(w * scale, h * scale));
+    p.image(tex.id(), dest, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
 }
 
 #[cfg(test)]

@@ -12,7 +12,7 @@ set -euo pipefail
 # shellcheck source=../common.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../common.sh"
 LINUX="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.deckcraft
+APP_ID=bzh.lusk.diapo
 
 TARGET_ARGS=()
 BIN="$CARGO_TARGET_DIR/release"

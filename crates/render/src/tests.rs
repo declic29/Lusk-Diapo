@@ -1403,7 +1403,7 @@ fn soft_edges_fade_to_the_outline() {
 #[test]
 fn a_file_defined_table_style_draws_its_parts() {
     // Red table background (tblBg), see-through white on banded rows, a 4 pt blue left border and
-    // no inside lines: drawn from the definition, not DeckCraft's own look for the style.
+    // no inside lines: drawn from the definition, not Lusk Diapo's own look for the style.
     use deckcraft_model::style::{Fill, Line};
     use deckcraft_model::table::{TableBorder, TablePart, TablePartStyle, TableStyleDef};
     let rgb = |r, g, b| ColorRef::rgb(deckcraft_color::Rgba::rgb(r, g, b));
@@ -1982,7 +1982,7 @@ fn metafile_skewed_bitmap_is_drawn_with_its_transform() {
 
     let image = std::sync::Arc::new(MetafileImage { width: 2, height: 2, rgba: [255, 0, 0, 255].repeat(4) });
     let xf = Affine::translate((25.0, 25.0)) * Affine::new([1.0, 0.25, 0.2, 1.0, 0.0, 0.0]) * Affine::scale(24.0);
-    let bytes = emf(&[Op::Image { image, xf, opacity: 1.0 }], Rect::new(0.0, 0.0, 100.0, 100.0), "DeckCraft", "skewed bitmap").expect("EMF");
+    let bytes = emf(&[Op::Image { image, xf, opacity: 1.0 }], Rect::new(0.0, 0.0, 100.0, 100.0), "Lusk Diapo", "skewed bitmap").expect("EMF");
     let img = crate::metafile::rasterize(&bytes, 160).expect("raster");
     let red: Vec<_> = img.enumerate_pixels().filter(|(_, _, p)| p[0] > 180 && p[1] < 80 && p[3] > 128).collect();
     assert!(red.len() > 100, "the transformed image is visible: {} red pixels", red.len());
@@ -2019,7 +2019,7 @@ fn metafile_clip_path_and_nondefault_pen_geometry_are_applied() {
         Op::Stroke { path: miter, pen: pen(Join::Miter) },
         Op::Unclip,
     ];
-    let bytes = emf(&ops, Rect::new(0.0, 0.0, 100.0, 100.0), "DeckCraft", "clipped strokes").expect("EMF");
+    let bytes = emf(&ops, Rect::new(0.0, 0.0, 100.0, 100.0), "Lusk Diapo", "clipped strokes").expect("EMF");
     let img = crate::metafile::rasterize(&bytes, 160).expect("raster");
     assert!(img.get_pixel(80, 40)[0] > 180, "inside the clip path is filled");
     assert_eq!(img.get_pixel(8, 80)[3], 0, "outside the clip path remains transparent");

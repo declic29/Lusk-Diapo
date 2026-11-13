@@ -1,4 +1,4 @@
-//! DeckCraft desktop app.
+//! Lusk Diapo desktop app.
 //!
 //! Usage: `deckcraft [--control <port>] [--sample] [--show] [files…]`
 //! A PowerPoint Show (`.ppsx`) given last starts its slide show, as a double-click does in PowerPoint.
@@ -72,9 +72,9 @@ impl eframe::App for App {
 /// The per-user settings directory: `ui.json`, `prefs.json` and `logs/` live here.
 fn config_dir() -> Option<std::path::PathBuf> {
     if cfg!(target_os = "macos") {
-        std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join("Library/Application Support/DeckCraft"))
+        std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join("Library/Application Support/Lusk Diapo"))
     } else if cfg!(windows) {
-        std::env::var_os("APPDATA").map(|a| std::path::PathBuf::from(a).join("DeckCraft"))
+        std::env::var_os("APPDATA").map(|a| std::path::PathBuf::from(a).join("Lusk Diapo"))
     } else {
         std::env::var_os("XDG_CONFIG_HOME")
             .map(std::path::PathBuf::from)
@@ -126,7 +126,7 @@ fn services(native_wayland: bool) -> Services {
                 "theme" => d.add_filter("Themes and presentations", &["thmx", "pptx", "potx", "ppsx"]).add_filter("Office Theme", &["thmx"]),
                 _ => d
                     .add_filter("Presentations", &["deckcraft", "pptx", "potx", "ppsx"])
-                    .add_filter("DeckCraft", &["deckcraft"])
+                    .add_filter("Lusk Diapo", &["deckcraft"])
                     .add_filter("PowerPoint", &["pptx", "potx", "ppsx"])
                     .add_filter("Outline", &["txt", "md"]),
             };
@@ -154,7 +154,7 @@ fn display_count(window: &winit::window::Window) -> Option<usize> {
     (n > 0).then_some(n)
 }
 
-const APP_ID: &str = "ai.storyteller.deckcraft";
+const APP_ID: &str = "bzh.lusk.diapo";
 
 const USAGE: &str = "\
 Usage: deckcraft [--control PORT] [--sample] [--show] [FILE...]
@@ -196,7 +196,7 @@ fn startup(mut control_port: Option<u16>, args: impl IntoIterator<Item = String>
 }
 
 fn app_icon() -> Option<egui::IconData> {
-    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.deckcraft.png");
+    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/bzh.lusk.diapo.png");
     eframe::icon_data::from_png_bytes(png).map_err(|e| log::warn!("app icon: {e}")).ok()
 }
 
@@ -208,7 +208,7 @@ fn main() -> eframe::Result {
     let logger = logging::install();
     if let Some(done) = craft_update::self_update::finish(&deckcraft_ui_egui::UPDATE_APP, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
         if let Err(e) = done {
-            eprintln!("DeckCraft update helper failed: {e}");
+            eprintln!("Lusk Diapo update helper failed: {e}");
             std::process::exit(1);
         }
         return Ok(());
@@ -225,7 +225,7 @@ fn main() -> eframe::Result {
             }
             Startup::Run { control_port, files, sample, show } => (control_port, files, sample, show),
         };
-    log::info!("DeckCraft {} ({} {})", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
+    log::info!("Lusk Diapo {} ({} {})", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
     // The log file lives under the settings directory; opened after the arguments, so `--help` and
     // `--version` leave no file behind. Records logged until now are written to it first.
     if let Some(logger) = logger {
@@ -240,7 +240,7 @@ fn main() -> eframe::Result {
     }
     let mut options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("DeckCraft")
+            .with_title("Lusk Diapo")
             .with_inner_size([1440.0, 900.0])
             .with_min_inner_size([900.0, 560.0])
             .with_drag_and_drop(true)
@@ -258,9 +258,9 @@ fn main() -> eframe::Result {
         display::Choice::X11 => true,
         display::Choice::Default => false,
         display::Choice::None => {
-            // winit's own error says little to someone who started DeckCraft from a console.
+            // winit's own error says little to someone who started Lusk Diapo from a console.
             log::error!("no display: DISPLAY and WAYLAND_DISPLAY are not set");
-            eprintln!("DeckCraft needs a graphical session: neither DISPLAY nor WAYLAND_DISPLAY is set.");
+            eprintln!("Lusk Diapo needs a graphical session: neither DISPLAY nor WAYLAND_DISPLAY is set.");
             false
         }
     };
@@ -286,7 +286,7 @@ fn main() -> eframe::Result {
     #[cfg(target_os = "macos")]
     let apple_events = &apple_events;
     eframe::run_native(
-        "DeckCraft",
+        "Lusk Diapo",
         options,
         Box::new(move |cc| {
             deckcraft_ui_egui::install_ime_pass_hooks(&cc.egui_ctx);
@@ -434,12 +434,12 @@ mod tests {
     /// Every desktop offers the same file types: macOS (`CFBundleTypeExtensions` and the native
     /// type's extension in `Info.plist.in`), Windows (`SupportedTypes` in `deckcraft.wxs`) and
     /// Linux (`MimeType` in the desktop file). A format added to one installer must reach the
-    /// others, and each must be one Finder, Explorer or the file manager can hand to DeckCraft.
+    /// others, and each must be one Finder, Explorer or the file manager can hand to Lusk Diapo.
     #[test]
     fn every_desktop_offers_the_same_file_types() {
         let plist = include_str!("../../../packaging/macos/Info.plist.in");
         let wxs = include_str!("../../../packaging/windows/deckcraft.wxs");
-        let desktop = include_str!("../../../packaging/linux/ai.storyteller.deckcraft.desktop");
+        let desktop = include_str!("../../../packaging/linux/bzh.lusk.diapo.desktop");
 
         let mut mac = plist_strings(plist, "CFBundleTypeExtensions");
         // The native type is declared by its UTI; its extension is in the exported type.

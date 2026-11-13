@@ -1,48 +1,75 @@
 #!/usr/bin/env bash
-# Regenerate the platform app icons from the committed PNGs in assets/app-icon/:
+# Regenerate every app icon from the Lusk Diapo icon, assets/app-icon/lusk-diapo-icone.png (the
+# three stacked cards with the « D » of the Lusk Diapo logo, on a transparent background: replace
+# this file to change the icon, then run this script).
 #
-#   assets/app-icon/deckcraft.ico    Windows (16–256 px, from hicolor/*)
-#   assets/app-icon/deckcraft.icns   macOS (16–1024 px, from deckcraft-1024.png; needs sips + iconutil)
+# The icon is centred on a square transparent canvas, assets/app-icon/deckcraft-1024.png, and every
+# size is drawn from that square.
 #
-# The PNGs themselves are rendered by DeckCraft from assets/app-icon/icon-source.deckcraft.
-# The outputs are committed, so builds and packaging never need these tools; package scripts
-# call this only when an output is missing.
+# Needs: python3 with Pillow (pip install Pillow), and cargo for the Windows .ico. The outputs are
+# committed, so builds and packaging never need these tools.
 #
-#   packaging/icons.sh [ico] [icns]     (default: both)
+#   packaging/icons.sh
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIR="$ROOT/assets/app-icon"
-ID="ai.storyteller.deckcraft"
-SRC="$DIR/deckcraft-1024.png"
-WANT="${*:-ico icns}"
+ID="bzh.lusk.diapo"
+LOGO="$DIR/lusk-diapo-icone.png"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-case " $WANT " in
-  *" ico "*)
-    ICO_PNGS=()
-    for s in 16 24 32 48 64 128 256; do
-      ICO_PNGS+=("$DIR/hicolor/${s}x${s}/apps/$ID.png")
-    done
-    (cd "$ROOT" && cargo run -q -p xtask -- ico "$DIR/deckcraft.ico" "${ICO_PNGS[@]}")
-    echo "wrote $DIR/deckcraft.ico"
-    ;;
-esac
+[ -f "$LOGO" ] || { echo "error: $LOGO not found" >&2; exit 1; }
+python3 -c "import PIL" 2>/dev/null || { echo "error: Pillow not found (pip install Pillow)" >&2; exit 1; }
 
-case " $WANT " in
-  *" icns "*)
-    if command -v iconutil >/dev/null && command -v sips >/dev/null; then
-      SET="$TMP/deckcraft.iconset"
-      mkdir -p "$SET"
-      for s in 16 32 128 256 512; do
-        sips -z "$s" "$s" "$SRC" --out "$SET/icon_${s}x${s}.png" >/dev/null
-        d=$((s * 2))
-        sips -z "$d" "$d" "$SRC" --out "$SET/icon_${s}x${s}@2x.png" >/dev/null
-      done
-      iconutil -c icns -o "$DIR/deckcraft.icns" "$SET"
-      echo "wrote $DIR/deckcraft.icns"
-    else
-      echo "warning: sips/iconutil not found (macOS only); deckcraft.icns not regenerated" >&2
-    fi
-    ;;
-esac
+# Windows and Linux use the square full bleed. macOS icons sit on Apple's grid: an 824/1024 body
+# with a transparent margin. The .icns is written by Pillow, so iconutil (macOS only) isn't needed.
+python3 - "$LOGO" "$DIR" "$ID" "$TMP" <<'PY'
+import os, sys
+from PIL import Image
+
+logo_path, out, app_id, tmp = sys.argv[1:5]
+logo = Image.open(logo_path).convert("RGBA")
+box = logo.getbbox()
+if box is None:
+    sys.exit(f"error: {logo_path} is empty")
+logo = logo.crop(box)
+
+def fit(im, size):
+    """im scaled to fit a size x size transparent square, centred."""
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    scale = min(size / im.width, size / im.height)
+    w, h = max(1, round(im.width * scale)), max(1, round(im.height * scale))
+    canvas.alpha_composite(im.resize((w, h), Image.Resampling.LANCZOS), ((size - w) // 2, (size - h) // 2))
+    return canvas
+
+def sized(im, s):
+    return im if im.size == (s, s) else im.resize((s, s), Image.Resampling.LANCZOS)
+
+master = fit(logo, 1024)
+master.save(os.path.join(out, "deckcraft-1024.png"), optimize=True)
+
+# Apple grid: the square scaled to 824/1024, centred on a transparent 1024 canvas.
+mac = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+mac.alpha_composite(sized(master, 824), (100, 100))
+
+# Linux hicolor theme.
+for s in (16, 24, 32, 48, 64, 128, 256, 512):
+    d = os.path.join(out, "hicolor", f"{s}x{s}", "apps")
+    os.makedirs(d, exist_ok=True)
+    sized(master, s).save(os.path.join(d, f"{app_id}.png"), optimize=True)
+
+# Windows .ico sizes, packed by xtask below.
+for s in (16, 20, 24, 32, 40, 48, 64, 128, 256):
+    sized(master, s).save(os.path.join(tmp, f"ico-{s}.png"))
+
+# macOS .icns.
+mac.save(os.path.join(out, "deckcraft.icns"), format="ICNS",
+         append_images=[sized(mac, s) for s in (16, 32, 64, 128, 256, 512)])
+PY
+
+ICO_PNGS=()
+for s in 16 20 24 32 40 48 64 128 256; do
+  ICO_PNGS+=("$TMP/ico-$s.png")
+done
+(cd "$ROOT" && cargo run -q -p xtask -- ico "$DIR/deckcraft.ico" "${ICO_PNGS[@]}")
+echo "icons written to $DIR"
