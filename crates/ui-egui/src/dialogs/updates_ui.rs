@@ -17,8 +17,15 @@ pub(crate) struct Runtime {
 
 impl Default for Runtime {
     fn default() -> Self {
-        Self { updater: Updater::new(&crate::UPDATE_APP, VERSION), enabled: false, check_requested: false }
+        Self { updater: Updater::new(&crate::UPDATE_APP, VERSION).with_translator(translate), enabled: false, check_requested: false }
     }
+}
+
+/// Lusk Diapo : les fenêtres de mise à jour (la proposition au démarrage et le résultat d'une
+/// recherche) dans la langue de l'interface. Leurs textes anglais sont les clés de la table, leurs
+/// `{valeurs}` remplies après la traduction.
+fn translate(text: &str, args: &[(&str, &str)]) -> String {
+    craft_update::translate::fill(crate::i18n::tr(text), args)
 }
 
 pub(crate) fn enable(app: &mut SlideApp) {
@@ -61,7 +68,7 @@ pub(crate) fn show(app: &mut SlideApp, ctx: &egui::Context) {
     // that update came to (installed, or why it failed).
     let rt = &mut app.updates_rt;
     if !matches!(rt.updater.status(), Status::Idle) {
-        let response = CheckResultDialog::new(&crate::UPDATE_APP, VERSION).show(ctx, rt.updater.status());
+        let response = CheckResultDialog::new(&crate::UPDATE_APP, VERSION).with_translator(translate).show(ctx, rt.updater.status());
         answer(rt, response);
     }
 }
@@ -96,6 +103,7 @@ mod tests {
     fn app_with_records(root: &std::path::Path) -> SlideApp {
         let mut app = SlideApp::new(deckcraft_engine::Session::new(), crate::Services::default());
         app.updates_rt.updater = Updater::new(&crate::UPDATE_APP, VERSION)
+            .with_translator(translate)
             .with_paths(craft_update::Paths::under(root))
             .with_pins_path(root.join("pins.json"))
             .with_source(std::sync::Arc::new(|| Ok(None)));

@@ -30,6 +30,7 @@ fn theme_font_choices(app: &SlideApp, selected: &str) -> Vec<String> {
 /// Draw an accessible font combo box and update the selected family; the caller supplies the
 /// visible label.
 fn font_combo(ui: &mut Ui, label: &str, choices: &[String], selected: &mut String) {
+    let label = crate::i18n::tr(label);
     let resp = craft_ui::ComboBox::from_id_salt(label).selected_text(selected.as_str()).width(240.0).show_ui(ui, |ui| {
         for face in choices {
             if ui.selectable_label(selected == face, face).clicked() {
@@ -72,11 +73,11 @@ pub(super) fn theme_fonts_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog
     let mut major = major;
     let mut minor = minor;
     ui.horizontal(|ui| {
-        ui.add_sized(vec2(110.0, 18.0), egui::Label::new("Heading:"));
+        ui.add_sized(vec2(110.0, 18.0), egui::Label::new(crate::i18n::tr("Heading:")));
         font_combo(ui, "Heading font", &headings, &mut major);
     });
     ui.horizontal(|ui| {
-        ui.add_sized(vec2(110.0, 18.0), egui::Label::new("Body:"));
+        ui.add_sized(vec2(110.0, 18.0), egui::Label::new(crate::i18n::tr("Body:")));
         font_combo(ui, "Body font", &bodies, &mut minor);
     });
     d.fields.insert("major".into(), major.clone());
@@ -84,22 +85,22 @@ pub(super) fn theme_fonts_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog
     ui.add_space(4.0);
     // Theme faces are not egui families; naming an unbound family panics. The lines show the
     // chosen names at heading and body sizes.
-    ui.label(egui::RichText::new(format!("Heading sample  {major}")).size(20.0));
-    ui.label(egui::RichText::new(format!("Body sample  {minor}")).size(14.0));
+    ui.label(egui::RichText::new(crate::i18n::trf("Heading sample  {0}", &[&major])).size(20.0));
+    ui.label(egui::RichText::new(crate::i18n::trf("Body sample  {0}", &[&minor])).size(14.0));
     ui.add_space(4.0);
     let mut name = d.get("schemeName", "");
     ui.horizontal(|ui| {
-        ui.add_sized(vec2(110.0, 18.0), egui::Label::new("Name:"));
+        ui.add_sized(vec2(110.0, 18.0), egui::Label::new(crate::i18n::tr("Name:")));
         let resp = ui.add(egui::TextEdit::singleline(&mut name).desired_width(240.0).id_salt("schemeName"));
         let shown = name.clone();
         resp.widget_info(move || {
-            let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, true, "Scheme name");
+            let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, true, crate::i18n::tr("Scheme name"));
             info.current_text_value = Some(shown.clone());
             info
         });
     });
     d.fields.insert("schemeName".into(), name);
-    ui.label(egui::RichText::new("Heading and body fonts for this presentation.").size(11.0).color(Tokens::get(ui.ctx()).text_dim));
+    ui.label(egui::RichText::new(crate::i18n::tr("Heading and body fonts for this presentation.")).size(11.0).color(Tokens::get(ui.ctx()).text_dim));
     let (ok, cancel) = buttons(ui, "Save");
     if ok {
         match theme_font_payload(d) {

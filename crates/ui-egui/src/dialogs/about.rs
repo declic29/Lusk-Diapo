@@ -20,17 +20,21 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
     ui.vertical_centered(|ui| {
         let (r, _) = ui.allocate_exact_size(vec2(220.0, 127.0), Sense::hover());
         paint_wordmark(ui.painter(), r);
-        ui.label(egui::RichText::new("Lusk Diapo").font(theme::bold(22.0)));
-        ui.label(egui::RichText::new(version_line()).color(t.text_dim));
+        ui.label(egui::RichText::new(crate::i18n::tr("Lusk Diapo")).font(theme::bold(22.0)));
+        ui.label(egui::RichText::new(crate::i18n::trs(version_line())).color(t.text_dim));
         ui.add_space(6.0);
-        ui.label("Présentations et diaporamas, libre et gratuit, porté par l'association Lusk (loi 1901).");
-        ui.label("Logiciel libre, sans lien avec Microsoft.");
+        ui.label(crate::i18n::tr("Présentations et diaporamas, libre et gratuit, porté par l'association Lusk (loi 1901)."));
+        ui.label(crate::i18n::tr("Logiciel libre, sans lien avec Microsoft."));
         ui.add_space(6.0);
-        ui.hyperlink_to("lusk.bzh", deckcraft_engine::links::WEBSITE);
-        ui.hyperlink_to("github.com/declic29/Lusk-Diapo", deckcraft_engine::links::GITHUB);
+        ui.hyperlink_to(crate::i18n::tr("lusk.bzh"), deckcraft_engine::links::WEBSITE);
+        ui.hyperlink_to(crate::i18n::tr("github.com/declic29/Lusk-Diapo"), deckcraft_engine::links::GITHUB);
         ui.add_space(6.0);
-        ui.label(egui::RichText::new("© 2026 Lusk. Licence MIT ou Apache 2.0.").size(11.0).color(t.text_faint));
-        ui.label(egui::RichText::new("Dérivé de DeckCraft, © 2026 ArtCraft Team and the DeckCraft contributors.").size(11.0).color(t.text_faint));
+        ui.label(egui::RichText::new(crate::i18n::tr("© 2026 Lusk. Licence MIT ou Apache 2.0.")).size(11.0).color(t.text_faint));
+        ui.label(
+            egui::RichText::new(crate::i18n::tr("Dérivé de DeckCraft, © 2026 ArtCraft Team and the DeckCraft contributors."))
+                .size(11.0)
+                .color(t.text_faint),
+        );
     });
 }
 
@@ -132,7 +136,7 @@ mod about_credits_tests {
             let mut block = egui::Rect::NOTHING;
             let mut whole = egui::Rect::NOTHING;
             let mut out = ctx.run_ui(egui::RawInput::default(), |ui| {
-                tabs = ui.label("About").rect;
+                tabs = ui.label(crate::i18n::tr("About")).rect;
                 block = credits_block(ui, models);
                 whole = ui.min_rect();
             });

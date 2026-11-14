@@ -137,12 +137,12 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
             let w = ui.fonts_mut(|f| f.layout_no_wrap("File".to_string(), theme::font(13.0), t.text).size().x) + 18.0;
             let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
             let resp = ui.interact(r, ui.scope_id().with("tab_file"), Sense::click());
-            resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "File"));
+            resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, crate::i18n::tr("File")));
             if resp.hovered() {
                 ui.painter().rect_filled(r.shrink2(vec2(2.0, 2.0)), CornerRadius::same(4), t.hover);
             }
-            ui.painter().text(r.center(), Align2::CENTER_CENTER, "File", theme::font(13.0), t.text);
-            if resp.on_hover_text("File (Alt+F)").clicked() {
+            ui.painter().text(r.center(), Align2::CENTER_CENTER, crate::i18n::tr("File"), theme::font(13.0), t.text);
+            if resp.on_hover_text(crate::i18n::tr("File (Alt+F)")).clicked() {
                 app.open_backstage(crate::backstage::Page::Home);
             }
             x += w + 2.0;
@@ -150,17 +150,19 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
         let all: Vec<(&str, bool)> = TABS.iter().map(|s| (*s, false)).chain(ctx_tabs.iter().map(|s| (*s, true))).collect();
         for (name, contextual) in all {
             let font = theme::font(13.0);
-            let w = ui.fonts_mut(|f| f.layout_no_wrap(name.to_string(), font.clone(), t.text).size().x) + 18.0;
+            // L'onglet garde son nom anglais (état, commandes) ; son libellé est traduit.
+            let shown = crate::i18n::tr(name);
+            let w = ui.fonts_mut(|f| f.layout_no_wrap(shown.to_string(), font.clone(), t.text).size().x) + 18.0;
             let r = Rect::from_min_size(pos2(x, y), vec2(w, 24.0));
             let resp = ui.interact(r, ui.scope_id().with(("tab", name)), Sense::click());
-            resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, name));
+            resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, shown));
             let active = app.ui.tab == name;
             if resp.hovered() && !active {
                 ui.painter().rect_filled(r.shrink2(vec2(2.0, 2.0)), CornerRadius::same(4), t.hover);
             }
             let col = if contextual { t.contextual } else { t.text };
             let f = if active { theme::bold(13.0) } else { font };
-            ui.painter().text(r.center(), Align2::CENTER_CENTER, name, f, col);
+            ui.painter().text(r.center(), Align2::CENTER_CENTER, shown, f, col);
             if active {
                 let uw = (w - 20.0).max(16.0);
                 ui.painter().rect_filled(Rect::from_center_size(pos2(r.center().x, r.max.y - 1.0), vec2(uw, 3.0)), CornerRadius::same(1), t.accent);
@@ -287,7 +289,8 @@ pub(super) fn spare_room(ctx: &egui::Context, tab: &str) -> Option<f32> {
 
 /// A chevron over a ribbon edge that scrolls it; `true` on the frame it is clicked.
 fn edge_cue(ui: &mut Ui, rect: Rect, glyph: &str, hint: &str, t: &Tokens) -> bool {
-    let resp = ui.interact(rect, ui.scope_id().with(glyph), Sense::click()).on_hover_text(hint);
+    let hint = crate::i18n::tr(hint);
+    let resp = ui.interact(rect, ui.scope_id().with(glyph), Sense::click()).on_hover_text(crate::i18n::trs(hint));
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, hint));
     let ink = if resp.hovered() { t.text } else { t.text_dim };
     ui.painter().rect_filled(rect, CornerRadius::ZERO, t.card);
@@ -328,6 +331,7 @@ fn toggle(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, on
 }
 
 fn tip(id: &str, label: &str) -> String {
+    let label = crate::i18n::tr(label);
     let sc = deckcraft_engine::find_command(id).and_then(|c| c.shortcut).or_else(|| crate::UI_COMMANDS.iter().find(|c| c.0 == id).and_then(|c| c.2));
     match sc {
         Some(s) => format!("{label} ({})", pretty_shortcut(s)),
@@ -338,6 +342,9 @@ fn tip(id: &str, label: &str) -> String {
 pub fn pretty_shortcut(s: &str) -> String {
     if cfg!(target_os = "macos") {
         s.replace("Cmd+", "⌘").replace("Shift+", "⇧").replace("Alt+", "⌥").replace("Ctrl+", "⌃")
+    } else if crate::i18n::french() {
+        // Les touches comme sur un clavier français : Maj pour Shift, Suppr pour Delete…
+        s.replace("Cmd+", "Ctrl+").replace("Shift+", "Maj+").replace("Delete", "Suppr").replace("Enter", "Entrée").replace("Space", "Espace")
     } else {
         s.replace("Cmd+", "Ctrl+")
     }
@@ -356,6 +363,7 @@ pub fn fmt_state(app: &mut SlideApp) -> Value {
 }
 
 pub fn menu_item(app: &mut SlideApp, ui: &mut Ui, icon: Icon, label: &str, id: &str, p: Value) {
+    let label = crate::i18n::tr(label);
     let en = enabled(app, id);
     let r = small_button(ui, icon, label, en, false);
     if r.clicked() {

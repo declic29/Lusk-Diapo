@@ -4,6 +4,11 @@
 //! A PowerPoint Show (`.ppsx`) given last starts its slide show, as a double-click does in PowerPoint.
 //! `deckcraft --help` prints the flags and exits. `deckcraft --version` prints the version and exits.
 //!
+//! Lusk Diapo opens with a start-up screen (`deckcraft_ui_egui::splash`); `--no-splash` or
+//! `LUSK_NO_SPLASH` skips it, as do the control channel, `--sample`, `--show` and
+//! `DECKCRAFT_NO_PREFS` (agents and scripts), and macOS, whose built-in title bar is set up as the
+//! window is created.
+//!
 //! `--control <port>` (or `DECKCRAFT_CONTROL_PORT`) starts a localhost JSON-lines control server:
 //! `{"id":1,"method":"ui.inspect","params":{}}` → `{"id":1,"ok":true,"result":…}`.
 //! See `deckcraft_ui_egui::control` for the methods.
@@ -29,8 +34,10 @@ mod pasteboard;
 use deckcraft_engine::Session;
 use deckcraft_ui_egui::{Services, SlideApp};
 
+/// The app, then (Lusk Diapo) the start-up screen while it shows: the window is then its own.
 struct App(
     SlideApp,
+    Option<deckcraft_ui_egui::splash::Splash>,
     /// Files opened from Finder and quit requests (see `apple_events`).
     #[cfg(target_os = "macos")]
     fmv_macos_events::Inbox,
@@ -39,7 +46,7 @@ struct App(
 impl eframe::App for App {
     fn logic(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         #[cfg(target_os = "macos")]
-        apple_events::poll(&self.1, &mut self.0, ctx);
+        apple_events::poll(&self.2, &mut self.0, ctx);
         self.0.logic(ctx);
     }
     /// Forward native raw input to the wrapped application once per pass.
@@ -47,7 +54,19 @@ impl eframe::App for App {
         self.0.raw_input_hook(ctx, raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        if let Some(splash) = &mut self.1 {
+            if splash.ui(&mut self.0, ui) {
+                self.1 = None;
+                become_main_window(ui.ctx());
+            }
+            return;
+        }
         self.0.ui(ui);
+    }
+    /// Lusk Diapo: transparent while the start-up screen shows (its fades and rounded corners),
+    /// then opaque, the colour of the panels.
+    fn clear_color(&self, visuals: &egui::Visuals) -> [f32; 4] {
+        if self.1.is_some() { [0.0; 4] } else { visuals.panel_fill.to_opaque().to_normalized_gamma_f32() }
     }
     fn on_exit(&mut self) {
         save_prefs(&self.0);
@@ -67,6 +86,24 @@ impl eframe::App for App {
         #[cfg(target_os = "macos")]
         std::process::exit(0);
     }
+}
+
+/// Lusk Diapo: once the start-up screen has finished, the window gets back its frame and the
+/// editor's size (1440 × 900 points, or the screen if smaller), centred, no longer on top.
+fn become_main_window(ctx: &egui::Context) {
+    use egui::ViewportCommand as C;
+    let monitor = ctx.input(|i| i.viewport().monitor_size);
+    let (w, h) = monitor.map_or((1440.0, 900.0), |m| (1440.0_f32.min(m.x), 900.0_f32.min(m.y)));
+    ctx.send_viewport_cmd(C::WindowLevel(egui::WindowLevel::Normal));
+    ctx.send_viewport_cmd(C::Decorations(true));
+    ctx.send_viewport_cmd(C::Resizable(true));
+    ctx.send_viewport_cmd(C::MinInnerSize(egui::vec2(900.0, 560.0)));
+    ctx.send_viewport_cmd(C::InnerSize(egui::vec2(w, h)));
+    if let Some(m) = monitor {
+        ctx.send_viewport_cmd(C::OuterPosition(egui::pos2(((m.x - w) / 2.0).max(0.0), ((m.y - h) / 2.0).max(0.0))));
+    }
+    ctx.send_viewport_cmd(C::Focus);
+    ctx.request_repaint();
 }
 
 /// The per-user settings directory: `ui.json`, `prefs.json` and `logs/` live here.
@@ -95,6 +132,21 @@ fn load_prefs(app: &mut SlideApp) {
     if let Some(prefs) = prefs {
         app.session.prefs = prefs;
     }
+    french_defaults(app);
+}
+
+/// Lusk Diapo, au premier démarrage en français : les mesures en centimètres et l'auteur
+/// « Utilisateur » plutôt que les pouces et « Presenter » de DeckCraft. Une seule fois : ce que
+/// vous changez ensuite dans Options est gardé.
+fn french_defaults(app: &mut SlideApp) {
+    if !deckcraft_ui_egui::i18n::french() || app.ui.lusk_fr {
+        return;
+    }
+    app.session.prefs.units = deckcraft_engine::geom::Unit::Centimeters;
+    if app.session.prefs.author.is_empty() || app.session.prefs.author == "Presenter" {
+        app.session.prefs.author = "Utilisateur".into();
+    }
+    app.ui.lusk_fr = true;
 }
 
 fn save_prefs(app: &SlideApp) {
@@ -157,11 +209,12 @@ fn display_count(window: &winit::window::Window) -> Option<usize> {
 const APP_ID: &str = "bzh.lusk.diapo";
 
 const USAGE: &str = "\
-Usage: deckcraft [--control PORT] [--sample] [--show] [FILE...]
+Usage: deckcraft [--control PORT] [--sample] [--show] [--no-splash] [FILE...]
 
   --control PORT  JSON control server on 127.0.0.1:PORT
   --sample        open the sample presentation
   --show          start the slide show
+  --no-splash     skip the start-up screen
   --help, -h      print this help and exit
   --version, -V   print the version and exit
 
@@ -171,7 +224,7 @@ A PowerPoint Show (.ppsx) given last starts its slide show.
 enum Startup {
     Help,
     Version,
-    Run { control_port: Option<u16>, files: Vec<String>, sample: bool, show: bool },
+    Run { control_port: Option<u16>, files: Vec<String>, sample: bool, show: bool, no_splash: bool },
 }
 
 /// `--help` and `--version` leave before the window and the log file.
@@ -179,12 +232,14 @@ fn startup(mut control_port: Option<u16>, args: impl IntoIterator<Item = String>
     let mut files = Vec::new();
     let mut sample = false;
     let mut show = false;
+    let mut no_splash = false;
     let mut args = args.into_iter();
     while let Some(a) = args.next() {
         match a.as_str() {
             "--control" => control_port = args.next().and_then(|p| p.parse().ok()),
             "--sample" => sample = true,
             "--show" => show = true,
+            "--no-splash" => no_splash = true,
             "--version" | "-V" => return Startup::Version,
             "--help" | "-h" => return Startup::Help,
             // The process serial number older macOS adds when Finder launches the app.
@@ -192,7 +247,7 @@ fn startup(mut control_port: Option<u16>, args: impl IntoIterator<Item = String>
             _ => files.push(a),
         }
     }
-    Startup::Run { control_port, files, sample, show }
+    Startup::Run { control_port, files, sample, show, no_splash }
 }
 
 fn app_icon() -> Option<egui::IconData> {
@@ -213,7 +268,7 @@ fn main() -> eframe::Result {
         }
         return Ok(());
     }
-    let (control_port, files, sample, show) =
+    let (control_port, files, sample, show, no_splash) =
         match startup(std::env::var("DECKCRAFT_CONTROL_PORT").ok().and_then(|p| p.parse().ok()), std::env::args().skip(1)) {
             Startup::Help => {
                 print!("{USAGE}");
@@ -223,9 +278,11 @@ fn main() -> eframe::Result {
                 println!("deckcraft {}", env!("CARGO_PKG_VERSION"));
                 return Ok(());
             }
-            Startup::Run { control_port, files, sample, show } => (control_port, files, sample, show),
+            Startup::Run { control_port, files, sample, show, no_splash } => (control_port, files, sample, show, no_splash),
         };
     log::info!("Lusk Diapo {} ({} {})", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
+    // Lusk Diapo est en français ; `LUSK_LANG=en` le remet en anglais (pour comparer avec DeckCraft).
+    deckcraft_ui_egui::i18n::set_french(std::env::var("LUSK_LANG").map_or(true, |l| !l.to_ascii_lowercase().starts_with("en")));
     // The log file lives under the settings directory; opened after the arguments, so `--help` and
     // `--version` leave no file behind. Records logged until now are written to it first.
     if let Some(logger) = logger {
@@ -253,6 +310,35 @@ fn main() -> eframe::Result {
     if let Some(icon) = app_icon() {
         options.viewport = options.viewport.with_icon(icon);
     }
+    // Lusk Diapo: the start-up screen, except for agents and scripts (control channel, sample,
+    // slide show, no preferences) and on macOS, where the built-in title bar is set up as the
+    // window is created.
+    let no_splash = no_splash || std::env::var_os("LUSK_NO_SPLASH").is_some();
+    let prefs = std::env::var_os("DECKCRAFT_NO_PREFS").is_none();
+    let splash = cfg!(not(target_os = "macos")) && !no_splash && control_port.is_none() && !sample && !show && prefs;
+    log::info!(
+        "écran d'accueil : {}",
+        if splash {
+            "affiché".to_string()
+        } else {
+            format!(
+                "non affiché (macOS {}, --no-splash ou LUSK_NO_SPLASH {no_splash}, canal de contrôle {}, exemple {sample}, diaporama {show}, préférences {prefs})",
+                cfg!(target_os = "macos"),
+                control_port.is_some()
+            )
+        }
+    );
+    if splash {
+        options.viewport = options
+            .viewport
+            .with_decorations(false)
+            .with_transparent(true)
+            .with_resizable(false)
+            .with_inner_size(deckcraft_ui_egui::splash::SIZE)
+            .with_min_inner_size(deckcraft_ui_egui::splash::SIZE)
+            .with_window_level(egui::WindowLevel::AlwaysOnTop);
+        options.centered = true;
+    }
     #[cfg(all(unix, not(target_os = "macos")))]
     let x11 = match display::choose_from_env() {
         display::Choice::X11 => true,
@@ -279,6 +365,11 @@ fn main() -> eframe::Result {
     // Before eframe creates the wgpu instance: default Windows to DirectX 12 with FXC (see graphics.rs).
     #[cfg(target_os = "windows")]
     graphics::configure(&mut options, eframe::wgpu::Backends::from_env(), eframe::wgpu::Dx12Compiler::from_env());
+    // DirectX 12 shows a transparent window only through DirectComposition.
+    #[cfg(target_os = "windows")]
+    if splash {
+        graphics::configure_transparency(&mut options);
+    }
     // Registered before the event loop starts, so it catches the Finder event that launched us as
     // well as later ones. Lives until the event loop returns; the app creator only borrows it.
     #[cfg(target_os = "macos")]
@@ -304,7 +395,14 @@ fn main() -> eframe::Result {
                 if let Ok(v) = app.session.execute("file.recovery.open", &serde_json::json!({}))
                     && let Some(n) = v.get("opened").and_then(|o| o.as_array()).map(Vec::len).filter(|n| *n > 0)
                 {
-                    app.set_status(format!("Recovered {n} unsaved presentation{} from the last session", if n == 1 { "" } else { "s" }));
+                    app.set_status(deckcraft_ui_egui::i18n::trf(
+                        if n == 1 {
+                            "Recovered {0} unsaved presentation from the last session"
+                        } else {
+                            "Recovered {0} unsaved presentations from the last session"
+                        },
+                        &[&n],
+                    ));
                 }
             }
             app.integrated_titlebar = cfg!(target_os = "macos");
@@ -324,6 +422,7 @@ fn main() -> eframe::Result {
             }
             Ok(Box::new(App(
                 app,
+                splash.then(|| deckcraft_ui_egui::splash::Splash::new(true)),
                 #[cfg(target_os = "macos")]
                 apple_events.connect(&cc.egui_ctx),
             )))
@@ -342,6 +441,7 @@ mod tests {
         if std::env::var_os("DECKCRAFT_TEST_ON_EXIT").is_some() {
             let mut app = App(
                 SlideApp::new(Session::new(), Services::default()),
+                None,
                 #[cfg(target_os = "macos")]
                 fmv_macos_events::Inbox::default(),
             );
@@ -390,7 +490,8 @@ mod tests {
         assert!(matches!(startup(None, ["--version".to_string()]), Startup::Version));
         let launch = startup(Some(9), ["--sample".to_string(), "--control".to_string(), "4242".to_string(), "talk.pptx".to_string()]);
         assert!(matches!(launch, Startup::Run { .. }));
-        if let Startup::Run { control_port, files, sample, show } = launch {
+        if let Startup::Run { control_port, files, sample, show, no_splash } = launch {
+            assert!(!no_splash);
             assert_eq!(control_port, Some(4242));
             assert_eq!(files, ["talk.pptx".to_string()]);
             assert!(sample);

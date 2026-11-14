@@ -209,7 +209,7 @@ impl Backstage {
             print_layout: "slides",
             print_hidden: false,
             print_frame: true,
-            print_paper: "letter",
+            print_paper: if crate::i18n::french() { "a4" } else { "letter" },
             print_landscape: false,
             preview_page: 0,
             export: ExportTask::Pdf,
@@ -333,7 +333,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
         ui.spacing_mut().item_spacing.y = 0.0;
         if has_doc {
             let (r, resp) = ui.allocate_exact_size(vec2(NAV_W, BACK_H), Sense::click());
-            resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Back"));
+            resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, crate::i18n::tr("Back")));
             let hovered = resp.hovered();
             if hovered {
                 ui.painter().rect_filled(Rect::from_center_size(pos2(r.left() + 26.0, r.center().y), vec2(34.0, 34.0)), 17.0, t.hover);
@@ -345,7 +345,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
                 t.text,
                 false,
             );
-            if resp.on_hover_text("Back (Esc)").clicked() {
+            if resp.on_hover_text(crate::i18n::tr("Back (Esc)")).clicked() {
                 out.close = true;
             }
         } else {
@@ -398,14 +398,14 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
                 // page past the right margin and clip the tiles (#1421).
                 ui.set_max_width(ui.available_width().min(CONTENT_W));
                 if bs.page != Page::Home {
-                    ui.label(RichText::new(bs.page.label()).font(theme::bold(22.0)).color(t.text));
+                    ui.label(RichText::new(crate::i18n::tr(bs.page.label())).font(theme::bold(22.0)).color(t.text));
                     ui.add_space(16.0);
                 }
                 // Errors raised on a backstage page (a missing recent file, a failed open) would
                 // otherwise vanish: the status bar only draws once the backstage is closed (#172).
                 // A real label, not painted text, so screen readers see it too.
                 if let Some(msg) = app.fresh_status() {
-                    ui.label(RichText::new(&msg).font(theme::font(12.0)).color(t.accent));
+                    ui.label(RichText::new(crate::i18n::trs(&msg)).font(theme::font(12.0)).color(t.accent));
                     ui.add_space(8.0);
                     ui.ctx().request_repaint_after(std::time::Duration::from_millis(500));
                 }
@@ -439,7 +439,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
 fn nav_item(ui: &mut Ui, nav: Nav, bs: &Backstage, index: usize, t: &Tokens) -> egui::Response {
     let (rect, resp) = ui.allocate_exact_size(vec2(NAV_W, ITEM_H), Sense::click());
     let selected = nav == Nav::Page(bs.page);
-    let label = nav.label();
+    let label = crate::i18n::tr(nav.label());
     resp.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, selected, label));
     let p = ui.painter();
     let row = rect.shrink2(vec2(6.0, 1.0));
@@ -466,18 +466,21 @@ fn separator(ui: &mut Ui, t: &Tokens) {
 // ---------------------------------------------------------------- shared pieces
 
 fn heading(ui: &mut Ui, text: &str) {
+    let text = crate::i18n::tr(text);
     let t = Tokens::get(ui.ctx());
-    ui.label(RichText::new(text).font(theme::bold(16.0)).color(t.text));
+    ui.label(RichText::new(crate::i18n::trs(text)).font(theme::bold(16.0)).color(t.text));
     ui.add_space(8.0);
 }
 
 fn dim(ui: &mut Ui, text: &str) {
+    let text = crate::i18n::tr(text);
     let t = Tokens::get(ui.ctx());
-    ui.label(RichText::new(text).font(theme::font(12.5)).color(t.text_dim));
+    ui.label(RichText::new(crate::i18n::trs(text)).font(theme::font(12.5)).color(t.text_dim));
 }
 
 /// A link with an arrow (More themes →): true when clicked.
 fn arrow_link(ui: &mut Ui, text: &str) -> bool {
+    let text = crate::i18n::tr(text);
     let t = Tokens::get(ui.ctx());
     ui.add(egui::Label::new(RichText::new(format!("{text}  →")).font(theme::font(12.5)).color(t.accent)).sense(Sense::click()))
         .on_hover_cursor(egui::CursorIcon::PointingHand)
@@ -486,11 +489,13 @@ fn arrow_link(ui: &mut Ui, text: &str) -> bool {
 
 /// A search box; true when its text changed.
 fn search(ui: &mut Ui, query: &mut String, hint: &str, width: f32) -> bool {
+    let hint = crate::i18n::tr(hint);
     ui.add(egui::TextEdit::singleline(query).hint_text(hint).desired_width(width)).changed()
 }
 
 /// Draw a labelled icon button and return whether it was clicked while enabled.
 fn icon_button(ui: &mut Ui, icon: Icon, label: &str, enabled: bool) -> bool {
+    let label = crate::i18n::tr(label);
     let t = Tokens::get(ui.ctx());
     let (r, resp) = ui.allocate_exact_size(vec2(22.0, 22.0), if enabled { Sense::click() } else { Sense::hover() });
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, enabled, label));
@@ -498,7 +503,7 @@ fn icon_button(ui: &mut Ui, icon: Icon, label: &str, enabled: bool) -> bool {
         ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
     }
     icons::paint(ui.painter(), r.shrink(3.0), icon, t.text, !enabled);
-    resp.on_hover_text(label).clicked()
+    resp.on_hover_text(crate::i18n::trs(label)).clicked()
 }
 
 fn bullets(ui: &mut Ui, items: &[&str]) {
@@ -506,7 +511,7 @@ fn bullets(ui: &mut Ui, items: &[&str]) {
     for b in items {
         ui.horizontal(|ui| {
             ui.add_space(6.0);
-            ui.label(RichText::new(format!("•  {b}")).font(theme::font(12.5)));
+            ui.label(RichText::new(format!("•  {}", crate::i18n::tr(b))).font(theme::font(12.5)));
         });
     }
     ui.add_space(10.0);

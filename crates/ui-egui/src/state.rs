@@ -94,6 +94,9 @@ pub struct UiState {
     pub comment_focus: Option<(usize, usize)>,
     /// Quick Access Toolbar buttons, left to right.
     pub qat: Vec<qat::QatItem>,
+    /// Lusk Diapo : les réglages français (centimètres, nom « Utilisateur ») ont été appliqués
+    /// une fois, au premier démarrage en français ; ensuite, ceux que vous choisissez restent.
+    pub lusk_fr: bool,
 }
 
 impl Default for UiState {
@@ -102,6 +105,7 @@ impl Default for UiState {
             brightness: theme::Brightness::Light,
             tab: "Home".into(),
             ribbon_collapsed: false,
+            lusk_fr: false,
             view: ViewMode::Normal,
             notes: true,
             notes_height: 52.0,

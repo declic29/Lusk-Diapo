@@ -207,13 +207,13 @@ impl View {
         let key = |name: &str| Command::Key { name: name.into(), command: false, shift: false, alt: false, ctrl: false };
         ui.horizontal_wrapped(|ui| {
             ui.heading(&snapshot.elapsed);
-            ui.label(format!("Slide {} of {}", snapshot.slide.saturating_add(1), snapshot.total));
+            ui.label(crate::i18n::trf("Slide {0} of {1}", &[&snapshot.slide.saturating_add(1), &snapshot.total]));
             for (label, name) in [("◀ Previous", "ArrowLeft"), ("Next ▶", "ArrowRight")] {
-                if ui.button(label).clicked() {
+                if ui.button(crate::i18n::trs(label)).clicked() {
                     commands.push(key(name));
                 }
             }
-            if ui.button("End Show").clicked() {
+            if ui.button(crate::i18n::tr("End Show")).clicked() {
                 commands.push(Command::End);
             }
         });
@@ -226,7 +226,7 @@ impl View {
                 ("All slides", "G"),
                 ("Zoom", "Z"),
             ] {
-                if ui.button(label).clicked() {
+                if ui.button(crate::i18n::trs(label)).clicked() {
                     commands.push(key(name));
                 }
             }
@@ -240,7 +240,7 @@ impl View {
         ui.columns(2, |columns| {
             let left = &mut columns[0];
             if snapshot.ended {
-                left.heading("End of slide show");
+                left.heading(crate::i18n::tr("End of slide show"));
             } else if let Some(texture) = &self.current {
                 let response = left.add(
                     egui::Image::new(texture)
@@ -262,10 +262,10 @@ impl View {
                 }
             }
             if snapshot.zoom_armed {
-                left.label("Click the preview to zoom.");
+                left.label(crate::i18n::tr("Click the preview to zoom."));
             }
             let right = &mut columns[1];
-            right.label("Next");
+            right.label(crate::i18n::tr("Next"));
             if let Some(texture) = &self.next {
                 right.add(egui::Image::new(texture).fit_to_exact_size(fit_preview(
                     texture.size_vec2(),
@@ -273,10 +273,10 @@ impl View {
                     right.available_height() * 0.45,
                 )));
             } else {
-                right.label("End of slide show");
+                right.label(crate::i18n::tr("End of slide show"));
             }
             right.horizontal(|ui| {
-                ui.label("Notes");
+                ui.label(crate::i18n::tr("Notes"));
                 if ui.button("A−").clicked() {
                     commands.push(key(egui::Key::OpenBracket.name()));
                 }
@@ -305,8 +305,8 @@ impl View {
                 .map(|(i, p)| p.image().map(|image| ui.ctx().load_texture(format!("remote-grid-{i}"), image, egui::TextureOptions::LINEAR)))
                 .collect();
         }
-        ui.heading("All slides");
-        ui.label("Choose a slide to show it, or press G to return.");
+        ui.heading(crate::i18n::tr("All slides"));
+        ui.label(crate::i18n::tr("Choose a slide to show it, or press G to return."));
         if snapshot.total > crate::show::GRID_CAP {
             ui.label(format!("First {} slides", crate::show::GRID_CAP));
         }
@@ -315,7 +315,11 @@ impl View {
                 for (i, texture) in self.grid.iter().enumerate() {
                     let size = egui::vec2(160.0, 90.0);
                     let label = format!("{}", i + 1);
-                    let label = if i == snapshot.slide { egui::RichText::new(label).strong() } else { egui::RichText::new(label) };
+                    let label = if i == snapshot.slide {
+                        egui::RichText::new(crate::i18n::trs(label)).strong()
+                    } else {
+                        egui::RichText::new(crate::i18n::trs(label))
+                    };
                     let response = match texture {
                         Some(t) => ui.add(egui::Button::image_and_text(
                             egui::Image::new(t).fit_to_exact_size(fit_preview(t.size_vec2(), size.x, size.y)),

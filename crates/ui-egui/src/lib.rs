@@ -33,6 +33,7 @@ pub mod control;
 pub mod dialogs;
 pub mod doc_window;
 pub mod eyedropper;
+pub mod i18n;
 pub mod icons;
 pub mod media;
 pub mod menus;
@@ -505,5 +506,7 @@ mod inbox_tests;
 #[cfg(test)]
 mod host_save_tests;
 
+#[cfg(test)]
+mod i18n_shots_tests;
 #[cfg(test)]
 mod tests;

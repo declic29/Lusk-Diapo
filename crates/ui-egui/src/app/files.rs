@@ -199,7 +199,7 @@ impl SlideApp {
             "deckcraft" => ("deckcraft", "deckcraft", false),
             "gif" => ("gif", "gif", false),
             other => {
-                self.set_status(format!("Lusk Diapo can't export “{other}”"));
+                self.set_status(crate::i18n::trf("Lusk Diapo can't export “{0}”", &[&other]));
                 return false;
             }
         };
@@ -212,7 +212,7 @@ impl SlideApp {
             }
             return match self.run("file.export", params) {
                 Ok(_) => {
-                    self.set_status(format!("Exported {path}"));
+                    self.set_status(crate::i18n::trf("Exported {0}", &[&path]));
                     true
                 }
                 Err(_) => false,
@@ -270,7 +270,7 @@ impl SlideApp {
         let preview_path = match self.print_previews.create(&title) {
             Ok(path) => path,
             Err(e) => {
-                self.set_status(format!("Couldn't create a private print preview: {e}"));
+                self.set_status(crate::i18n::trf("Couldn't create a private print preview: {0}", &[&e]));
                 return false;
             }
         };
@@ -398,7 +398,7 @@ impl SlideApp {
         match result {
             Ok(()) => {
                 self.reuse_target = None;
-                self.set_status(format!("Inserted {} slides", picked.len()));
+                self.set_status(crate::i18n::trf("Inserted {0} slides", &[&picked.len()]));
                 true
             }
             Err(e) => {
@@ -455,7 +455,7 @@ impl SlideApp {
             if let Some(path) = pick(&suggested) {
                 match self.session.execute("file.saveAs", &json!({"path": path})) {
                     Ok(_) => {
-                        self.set_status(format!("Saved {path}"));
+                        self.set_status(crate::i18n::trf("Saved {0}", &[&path]));
                         self.ui.recent.retain(|p| *p != path);
                         self.ui.recent.insert(0, path);
                     }
@@ -525,7 +525,7 @@ impl SlideApp {
         });
         match saved {
             Ok(()) => {
-                self.set_status(format!("Saved {name}"));
+                self.set_status(crate::i18n::trf("Saved {0}", &[&name]));
                 Ok(name)
             }
             Err(e) => {

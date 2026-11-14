@@ -94,6 +94,14 @@ pub enum PhType {
     SlideImage,
 }
 
+/// Lusk Diapo: the prompts of empty placeholders in French ([`set_french_prompts`]).
+static FRENCH_PROMPTS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Shows the prompts of empty placeholders ("Click to add title"…) in French (`true`) or English.
+pub fn set_french_prompts(on: bool) {
+    FRENCH_PROMPTS.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+
 impl PhType {
     pub fn xml(self) -> &'static str {
         match self {
@@ -138,8 +146,26 @@ impl PhType {
     pub fn is_title(self) -> bool {
         matches!(self, PhType::Title | PhType::CtrTitle)
     }
-    /// The prompt shown in an empty placeholder in Normal view.
+    /// The prompt shown in an empty placeholder in Normal view (in French once
+    /// [`set_french_prompts`] is on: Lusk Diapo).
     pub fn prompt(self) -> &'static str {
+        if FRENCH_PROMPTS.load(std::sync::atomic::Ordering::Relaxed) {
+            return match self {
+                PhType::Title | PhType::CtrTitle => "Cliquez pour ajouter un titre",
+                PhType::SubTitle => "Cliquez pour ajouter un sous-titre",
+                PhType::Body | PhType::Obj => "Cliquez pour ajouter du texte",
+                PhType::Chart => "Cliquez sur l'icône pour ajouter un graphique",
+                PhType::Table => "Cliquez sur l'icône pour ajouter un tableau",
+                PhType::Diagram => "Cliquez sur l'icône pour ajouter un graphique SmartArt",
+                PhType::Media => "Cliquez sur l'icône pour ajouter un média",
+                PhType::Picture | PhType::ClipArt => "Cliquez sur l'icône pour ajouter une image",
+                PhType::Date => "Date",
+                PhType::Footer => "Pied de page",
+                PhType::SlideNum => "‹#›",
+                PhType::Header => "En-tête",
+                PhType::SlideImage => "",
+            };
+        }
         match self {
             PhType::Title | PhType::CtrTitle => "Click to add title",
             PhType::SubTitle => "Click to add subtitle",

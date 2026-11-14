@@ -663,7 +663,7 @@ fn draw_slide(app: &mut SlideApp, ui: &mut Ui, show: &mut Show, f: &Fr, painter:
         painter.text(
             pos2(full.center().x, full.min.y + 40.0),
             Align2::CENTER_CENTER,
-            "End of slide show, click to exit.",
+            crate::i18n::tr("End of slide show, click to exit."),
             theme::font(18.0),
             Color32::from_gray(200),
         );
@@ -699,7 +699,7 @@ fn draw_pen_and_hints(ui: &mut Ui, show: &mut Show, f: &Fr, painter: &egui::Pain
     // Pen.
     let resp = ui.interact(full, ui.scope_id().with("show_pen"), if show.pen { Sense::drag() } else { Sense::hover() });
     if show.pen {
-        resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, "Pen"));
+        resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, crate::i18n::tr("Pen")));
     }
     if show.pen {
         if resp.drag_started() {
@@ -744,7 +744,7 @@ fn draw_pen_and_hints(ui: &mut Ui, show: &mut Show, f: &Fr, painter: &egui::Pain
         painter.text(
             pos2(full.center().x, full.min.y + 36.0),
             Align2::CENTER_CENTER,
-            "Click the slide to zoom in. Esc cancels.",
+            crate::i18n::tr("Click the slide to zoom in. Esc cancels."),
             theme::font(16.0),
             Color32::WHITE,
         );
@@ -760,7 +760,7 @@ fn draw_bars(ui: &mut Ui, show: &mut Show, f: &Fr, painter: &egui::Painter, out:
         painter.text(
             pos2(bar.min.x + 14.0, bar.center().y),
             Align2::LEFT_CENTER,
-            format!("Slide {} of {}", show.state.slide + 1, doc.slides.len()),
+            crate::i18n::trf("Slide {0} of {1}", &[&(show.state.slide + 1), &doc.slides.len()]),
             theme::font(12.0),
             Color32::from_gray(200),
         );
@@ -769,7 +769,7 @@ fn draw_bars(ui: &mut Ui, show: &mut Show, f: &Fr, painter: &egui::Painter, out:
                 .max_rect(Rect::from_min_max(pos2(bar.max.x - 260.0, bar.min.y), bar.max))
                 .layout(egui::Layout::right_to_left(egui::Align::Center)),
         );
-        if child.button("Close").clicked() {
+        if child.button(crate::i18n::tr("Close")).clicked() {
             out.keep = false;
         }
         if child.button("▶").clicked() {
@@ -787,7 +787,8 @@ fn draw_bars(ui: &mut Ui, show: &mut Show, f: &Fr, painter: &egui::Painter, out:
         painter.rect_filled(bar, CornerRadius::same(17), Color32::from_black_alpha(140));
         let mut child =
             ui.new_child(egui::UiBuilder::new().max_rect(bar.shrink2(vec2(10.0, 4.0))).layout(egui::Layout::left_to_right(egui::Align::Center)));
-        let b = |ui: &mut Ui, s: &str| ui.add(egui::Button::new(egui::RichText::new(s).color(Color32::WHITE).size(15.0)).frame(false));
+        let b =
+            |ui: &mut Ui, s: &str| ui.add(egui::Button::new(egui::RichText::new(crate::i18n::trs(s)).color(Color32::WHITE).size(15.0)).frame(false));
         if b(&mut child, "◀").clicked() {
             let a = show.state.prev(doc);
             show.apply(a, doc, now);
