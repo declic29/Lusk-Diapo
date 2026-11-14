@@ -49,11 +49,16 @@
   français ; virgule décimale. Balayage du ruban :
   `LUSK_SWEEP=<fichier> cargo test -p deckcraft-ui-egui --lib ribbon_sweep` clique chaque bouton
   de chaque onglet et note ceux qui ne font rien ou plantent (262 boutons, aucun plantage).
+- 14 novembre 2026 (soir) : plus de remerciements (« Credits ») dans Fichier › À propos ni dans la
+  boîte À propos : seules les informations sur le logiciel restent (`dialogs/credits.rs` et
+  `crates/ui-egui/build.rs` supprimés). Fichier › Enregistrer sous propose OneDrive et Google
+  Drive comme Lusk Texte et Lusk Tab (`cloud.rs` repris de Lusk Tab) : la boîte d'enregistrement
+  s'ouvre dans le dossier du service ; une tuile grisée avec une aide quand le service n'est pas
+  installé.
 
 ## À faire (dans l'ordre du cahier des charges)
 
 4. Dictionnaires français, breton, anglais et synonymes (de Lusk Texte).
-5. Pages de Fichier (Accueil avec le renard, Ouvrir / Enregistrer sous avec OneDrive et Google
-   Drive, Mises à jour, Compte) et onglet Aide.
+5. Pages de Fichier (Accueil avec le renard, Ouvrir avec OneDrive et Google Drive, Compte) et onglet Aide.
 6. Relevé réseau et page Confidentialité.
 7. Installateurs Windows, macOS, Linux et workflow « Publication » ; version 1.0.0.

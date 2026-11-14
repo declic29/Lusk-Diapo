@@ -56,6 +56,7 @@ impl SlideApp {
             reuse_target: None,
             media: media::MediaHost::new(audio_out),
             status: None,
+            save_in: None,
             opening: None,
             toast: None,
             fonts_noted: Default::default(),

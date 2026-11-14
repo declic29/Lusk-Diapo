@@ -13,6 +13,8 @@ fn shoot(dir: &std::path::Path, name: &str, setup: impl FnOnce(&mut SlideApp)) {
     crate::i18n::set_french_on_this_thread(Some(true));
     let mut app = SlideApp::new(Session::new(), Services::default());
     let _ = deckcraft_engine::sample::open_sample(&mut app.session);
+    // Comme l'application de bureau : la page Enregistrer sous montre OneDrive et Google Drive.
+    app.services.pick_save_in = Some(Box::new(|_: &str, _: &std::path::Path| None));
     setup(&mut app);
     let mut harness = egui_kittest::Harness::builder()
         .with_size(egui::vec2(1500.0, 900.0))

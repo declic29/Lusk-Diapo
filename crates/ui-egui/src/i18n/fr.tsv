@@ -1495,6 +1495,12 @@ Presentation title	Titre de la présentation
 Your text here	Votre texte ici
 KB	Ko
 MB	Mo
+# ─── Enregistrer dans OneDrive ou Google Drive ───
+Save to an online space	Enregistrer dans un espace en ligne
+To use OneDrive, the OneDrive app must be installed on this computer and signed in to your Microsoft account (it comes with Windows). Lusk Diapo then saves in your OneDrive folder, and OneDrive sends the presentation online.	Pour utiliser OneDrive, l'application OneDrive doit être installée sur cet ordinateur et connectée à votre compte Microsoft (elle est fournie avec Windows). Lusk Diapo enregistre alors dans votre dossier OneDrive, et OneDrive envoie la présentation en ligne.
+To use Google Drive, the free Google Drive for desktop app must be installed on this computer and signed in to your Google account. Lusk Diapo then saves in My Drive, and Google Drive sends the presentation online: you find it in your Google Drive space.	Pour utiliser Google Drive, l'application gratuite « Google Drive pour ordinateur » doit être installée sur cet ordinateur et connectée à votre compte Google. Lusk Diapo enregistre alors dans « Mon Drive », et Google Drive envoie la présentation en ligne : vous la retrouvez dans votre espace Google Drive.
+{0} isn't installed on this computer.	{0} n'est pas installé sur cet ordinateur.
+Save to your {0} space ({1})	Enregistrer dans votre espace {0} ({1})
 # ─── Transitions, animations, options d'effet ───
 Morph	Morphose
 Fade	Fondu

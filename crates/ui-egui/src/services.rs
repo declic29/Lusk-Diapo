@@ -46,6 +46,9 @@ pub struct Services {
     pub pick_open: Option<PickFn>,
     /// Save dialog with a suggested name → path.
     pub pick_save: Option<PickFn>,
+    /// Lusk Diapo : la même boîte d'enregistrement, ouverte dans un dossier donné (OneDrive,
+    /// Google Drive) : nom proposé, dossier → chemin.
+    pub pick_save_in: Option<Box<dyn FnMut(&str, &std::path::Path) -> Option<String>>>,
     pub read: Option<ReadFn>,
     pub write: Option<WriteFn>,
     /// Asynchronous open dialog (web). The callback receives the purpose and the request id

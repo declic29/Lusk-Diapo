@@ -168,7 +168,7 @@ fn every_page_renders() {
         (Page::SaveAs, "Not saved yet"),
         (Page::Print, "Print Hidden Slides"),
         (Page::Export, "Create PDF Document"),
-        (Page::About, "Credits"),
+        (Page::About, "lusk.bzh"),
     ];
     for (p, marker) in checks {
         h.state_mut().run("app.backstage", json!({"page": p.id()})).unwrap();
@@ -765,9 +765,9 @@ fn options_in_backstage_opens_preferences_and_cancel_closes_it() {
     assert!(h.state().backstage_open(), "Backstage remains open");
 }
 
-/// About replaces the account entry and still opens the credits dialog.
+/// About replaces the account entry; Lusk Diapo keeps the software information only, no credits.
 #[test]
-fn about_has_product_links_and_credits_without_account_controls() {
+fn about_has_product_links_without_credits_or_account_controls() {
     let mut h = harness(new_app());
     h.get_by_label("File").click();
     h.run_steps(3);
@@ -779,11 +779,8 @@ fn about_has_product_links_and_credits_without_account_controls() {
     assert!(h.query_by_label("Source on GitHub").is_some());
     assert!(h.query_by_label("lusk.bzh").is_some());
     assert!(h.query_all_by_label("Appearance").next().is_some());
-    click_on_page(&h, "Credits");
-    h.run_steps(3);
-    assert!(h.state().dialog.is_some());
-    assert!(h.query_by_label("Contributors").is_some());
-    assert!(h.query_by_label("Models").is_some());
+    assert!(h.query_by_label("Credits").is_none());
+    assert!(h.query_by_label("Contributors").is_none());
 }
 
 /// At the 900-point minimum window width the About columns stack and Appearance stays on the page.

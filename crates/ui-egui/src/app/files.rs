@@ -204,8 +204,8 @@ impl SlideApp {
             }
         };
         let suggested = self.suggested_name(ext);
-        if let Some(pick) = self.services.pick_save.as_mut() {
-            let Some(path) = pick(&suggested) else { return false };
+        if self.services.pick_save.is_some() {
+            let Some(path) = self.pick_save_path(&suggested) else { return false };
             let mut params = json!({"path": path, "format": format, "all": all});
             if let (Some(o), Some(x)) = (params.as_object_mut(), extra.as_object()) {
                 o.extend(x.clone());
@@ -447,12 +447,23 @@ impl SlideApp {
         }
     }
 
+    /// Lusk Diapo : la boîte d'enregistrement, ouverte dans le dossier choisi sur la page
+    /// Enregistrer sous (OneDrive, Google Drive) quand il y en a un, sinon là où le système veut.
+    fn pick_save_path(&mut self, suggested: &str) -> Option<String> {
+        if let Some(dir) = self.save_in.take()
+            && let Some(pick) = self.services.pick_save_in.as_mut()
+        {
+            return pick(suggested, &dir);
+        }
+        self.services.pick_save.as_mut().and_then(|pick| pick(suggested))
+    }
+
     pub fn save_as_dialog(&mut self, format: &str) {
         let name = self.session.active().map(|d| d.title()).unwrap_or_else(|| "Presentation".into());
         let ext = if format == "pptx" { "pptx" } else { "deckcraft" };
         let suggested = format!("{name}.{ext}");
-        if let Some(pick) = self.services.pick_save.as_mut() {
-            if let Some(path) = pick(&suggested) {
+        if self.services.pick_save.is_some() {
+            if let Some(path) = self.pick_save_path(&suggested) {
                 match self.session.execute("file.saveAs", &json!({"path": path})) {
                     Ok(_) => {
                         self.set_status(crate::i18n::trf("Saved {0}", &[&path]));

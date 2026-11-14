@@ -1287,7 +1287,6 @@ dependencies = [
  "serde",
  "serde_json",
  "skrifa 0.47.0",
- "toml",
  "web-time",
 ]
 

@@ -1,4 +1,4 @@
-use super::about::{about, credits_block};
+use super::about::about;
 use super::alt_text::alt_text_starts_decorative;
 use super::columns::columns_dialog;
 use super::date_time::{date_rows, date_time_dialog};
@@ -1281,22 +1281,9 @@ fn dlg_smartart(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     ok || cancel
 }
 
-fn dlg_about(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
-    let tab = d.get("tab", "about");
-    ui.horizontal(|ui| {
-        for (k, l) in [("about", "About"), ("contributors", "Contributors"), ("models", "Models")] {
-            if ui.selectable_label(tab == k, crate::i18n::trs(l)).clicked() {
-                d.fields.insert("tab".into(), k.into());
-            }
-        }
-    });
-    ui.separator();
-    match tab.as_str() {
-        "contributors" | "models" => {
-            credits_block(ui, tab == "models");
-        }
-        _ => about(app, ui),
-    }
+/// Lusk Diapo : les informations sur le logiciel seulement (pas de remerciements).
+fn dlg_about(app: &mut SlideApp, ui: &mut Ui, _d: &mut Dialog) -> bool {
+    about(app, ui);
     let (ok, cancel) = buttons(ui, "Close");
     ok || cancel
 }

@@ -285,6 +285,8 @@ icons! {
     CommentsBubble => "comments-bubble",
     File => "file",
     Folder => "folder",
+    /// Lusk Diapo : OneDrive, Google Drive (Fichier › Enregistrer sous).
+    Cloud => "cloud",
     Export => "export",
     Print => "print",
     Settings => "settings",

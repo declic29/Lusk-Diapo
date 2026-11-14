@@ -29,6 +29,7 @@ pub const UPDATE_APP: craft_update::app::App = craft_update::app::App {
 pub mod backstage;
 pub mod canvas;
 pub mod capture;
+pub mod cloud;
 pub mod control;
 pub mod dialogs;
 pub mod doc_window;
@@ -74,7 +75,6 @@ use app::{OBJECTS_MARKER, system_clipboard_text, web_image_files};
 use canvas::preview;
 pub use canvas::squiggles;
 pub use clock::{monotonic_secs, now_ms};
-pub use dialogs::credits;
 #[cfg(not(target_arch = "wasm32"))]
 use dialogs::updates_ui;
 pub use ime_hooks::install_ime_pass_hooks;
@@ -252,6 +252,9 @@ pub struct SlideApp {
     /// Audio/video playback (editor control bar, slide show, `media.*` commands).
     pub media: media::MediaHost,
     pub status: Option<(String, f64)>,
+    /// Lusk Diapo : le dossier où ouvrir la prochaine boîte d'enregistrement (OneDrive, Google
+    /// Drive), choisi sur la page Enregistrer sous ; pris par cette boîte.
+    pub save_in: Option<std::path::PathBuf>,
     /// A presentation being read in the background, with its progress window ([`opening`]).
     pub opening: Option<opening::Opening>,
     /// A brief notice over the bottom of the window (missing fonts on opening a file).

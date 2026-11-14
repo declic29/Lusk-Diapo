@@ -201,9 +201,80 @@ pub(super) fn save_as(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage, out: 
     if let Some((_, _, detail)) = SAVE_TYPES.iter().find(|s| s.0 == bs.file_type) {
         dim(ui, detail);
     }
+    // Lusk Diapo (comme Lusk Texte et Lusk Tab) : enregistrer dans OneDrive ou Google Drive.
+    if app.services.pick_save_in.is_some() {
+        ui.add_space(18.0);
+        ui.label(RichText::new(crate::i18n::tr("Save to an online space")).font(theme::bold(13.0)).color(t.text));
+        ui.add_space(6.0);
+        let mut chosen = None;
+        ui.horizontal_wrapped(|ui| chosen = cloud_buttons(ui));
+        if let Some(dir) = chosen {
+            app.save_in = Some(dir);
+            let fmt = bs.file_type;
+            let done = if matches!(fmt, "pptx" | "deckcraft") {
+                let snapshot = |app: &SlideApp| app.session.active().map(|d| (d.path.clone(), d.is_dirty(), d.revision));
+                let before = snapshot(app);
+                app.save_as_dialog(fmt);
+                snapshot(app) != before
+            } else {
+                app.export_as(fmt, json!({}))
+            };
+            app.save_in = None;
+            if done {
+                out.close = true;
+            }
+        }
+    }
 }
 
-/// Product information, project links, credits and appearance preferences.
+/// Lusk Diapo : un bouton par dossier OneDrive et Google Drive de cet ordinateur (grisé, avec
+/// une aide, quand le service n'est pas installé). Rend le dossier choisi.
+fn cloud_buttons(ui: &mut Ui) -> Option<std::path::PathBuf> {
+    let (onedrive, google) = crate::cloud::cloud_dirs(ui.ctx());
+    let services = [
+        (
+            "OneDrive",
+            onedrive,
+            "To use OneDrive, the OneDrive app must be installed on this computer and signed in to your Microsoft account (it comes with Windows). Lusk Diapo then saves in your OneDrive folder, and OneDrive sends the presentation online.",
+        ),
+        (
+            "Google Drive",
+            google,
+            "To use Google Drive, the free Google Drive for desktop app must be installed on this computer and signed in to your Google account. Lusk Diapo then saves in My Drive, and Google Drive sends the presentation online: you find it in your Google Drive space.",
+        ),
+    ];
+    let mut clicked = None;
+    for (service, dirs, help) in services {
+        if dirs.is_empty() {
+            super::files::square_button(ui, Icon::Cloud, service, false)
+                .on_hover_text(crate::i18n::trf("{0} isn't installed on this computer.", &[&service]));
+            help_hint(ui, crate::i18n::tr(help));
+            ui.add_space(6.0);
+            continue;
+        }
+        for (label, dir) in dirs {
+            let tip = crate::i18n::trf("Save to your {0} space ({1})", &[&service, &dir.display()]);
+            if super::files::square_button(ui, Icon::Cloud, &label, true).on_hover_text(tip).clicked() {
+                clicked = Some(dir);
+            }
+            help_hint(ui, crate::i18n::tr(help));
+            ui.add_space(6.0);
+        }
+    }
+    clicked
+}
+
+/// A small help icon (?) whose tooltip explains `text`.
+fn help_hint(ui: &mut Ui, text: &str) {
+    let name = crate::i18n::tr("Help").to_string();
+    let (r, resp) = ui.allocate_exact_size(vec2(18.0, 18.0), Sense::hover());
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Label, true, &name));
+    let t = Tokens::get(ui.ctx());
+    crate::icons::paint(ui.painter(), r, Icon::Help, t.text_dim, false);
+    resp.on_hover_text(text);
+}
+
+/// Product information, project links and appearance preferences (Lusk Diapo: no credits).
 pub(super) fn about(app: &mut SlideApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
     // Side by side needs 480 + 40 + 340 points; stack the columns when the page is narrower.
@@ -220,9 +291,6 @@ pub(super) fn about(app: &mut SlideApp, ui: &mut Ui) {
             dim(ui, &crate::dialogs::version_line());
             dim(ui, "Open source under MIT OR Apache-2.0. Not affiliated with Microsoft.");
             ui.add_space(14.0);
-            if task(ui, Icon::Help, "Credits", "Credits", "The people and models who built Lusk Diapo.", true) {
-                let _ = app.run("app.about", json!({}));
-            }
             ui.hyperlink_to(crate::i18n::tr("lusk.bzh"), deckcraft_engine::links::WEBSITE);
             ui.hyperlink_to(crate::i18n::tr("Source on GitHub"), deckcraft_engine::links::GITHUB);
         });
