@@ -29,6 +29,20 @@ pub fn configure(options: &mut NativeOptions, backend_override: Option<Backends>
     }
 }
 
+/// Lusk Diapo's start-up screen is a transparent window (its fades and rounded corners). With
+/// DirectX 12 that needs DirectComposition (`DxgiFromVisual`); the default swap chain shows the
+/// transparent parts black. wgpu's own `WGPU_DX12_PRESENTATION_SYSTEM` (`Hwnd`) still wins, as a
+/// way back if a driver misbehaves.
+#[cfg(target_os = "windows")]
+pub fn configure_transparency(options: &mut NativeOptions) {
+    if std::env::var_os("WGPU_DX12_PRESENTATION_SYSTEM").is_some() {
+        return;
+    }
+    if let WgpuSetup::CreateNew(create) = &mut options.wgpu_options.wgpu_setup {
+        create.instance_descriptor.backend_options.dx12.presentation_system = eframe::wgpu::Dx12SwapchainKind::DxgiFromVisual;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

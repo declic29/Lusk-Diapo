@@ -42,6 +42,7 @@ pub mod ribbon;
 pub mod settings;
 pub mod show;
 pub mod sorter;
+pub mod splash;
 pub mod status;
 pub mod textures;
 pub mod theme;
