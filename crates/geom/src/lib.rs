@@ -68,18 +68,19 @@ impl Unit {
             Unit::Pixels => " px",
         }
     }
-    /// `2.08"` style text for a length in points.
+    /// `2.08"` style text for a length in points (`2,08 cm` with the decimal comma).
     pub fn format(self, pt: f64) -> String {
         let v = pt / self.points_per_unit();
         let mut s = format!("{v:.2}");
         if s.starts_with('-') && s[1..].bytes().all(|b| b == b'0' || b == b'.') {
             s.remove(0);
         }
-        format!("{s}{}", self.suffix())
+        format!("{}{}", decimal(&s), self.suffix())
     }
     /// Parses `2.5`, `2.5"`, `2.5 in`, `6 cm`, `30 pt`, `40px`, `5mm` into points. A bare number uses `self`.
     pub fn parse(self, text: &str) -> Option<f64> {
-        let t = text.trim().to_ascii_lowercase();
+        // `2,5` (French) reads as `2.5`.
+        let t = text.trim().to_ascii_lowercase().replace(',', ".");
         let (num, unit) = split_number(&t)?;
         let ppu = match unit.trim() {
             "" => self.points_per_unit(),
@@ -93,6 +94,18 @@ impl Unit {
         let v = num * ppu;
         v.is_finite().then_some(v)
     }
+}
+
+static DECIMAL_COMMA: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Lusk Diapo : les nombres affichés avec la virgule décimale (`0,7`), comme en français.
+pub fn set_decimal_comma(on: bool) {
+    DECIMAL_COMMA.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// `s` (a number written by Rust, `0.7`) with the decimal separator in use (`0,7`).
+pub fn decimal(s: &str) -> String {
+    if DECIMAL_COMMA.load(std::sync::atomic::Ordering::Relaxed) { s.replace('.', ",") } else { s.to_string() }
 }
 
 fn split_number(t: &str) -> Option<(f64, &str)> {

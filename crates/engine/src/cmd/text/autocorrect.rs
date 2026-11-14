@@ -69,6 +69,70 @@ pub const AUTOCORRECT: &[(&str, &str)] = &[
     ("--", "–"),
 ];
 
+/// Lusk Diapo : les fautes de frappe courantes en français et les symboles. Comme dans
+/// PowerPoint en français : pas de majuscule aux jours de la semaine, ordinaux « 1er », « 2e ».
+pub const AUTOCORRECT_FR: &[(&str, &str)] = &[
+    ("aprés", "après"),
+    ("aujourdhui", "aujourd'hui"),
+    ("biensur", "bien sûr"),
+    ("bientot", "bientôt"),
+    ("cad", "c'est-à-dire"),
+    ("cest", "c'est"),
+    ("dailleurs", "d'ailleurs"),
+    ("deja", "déjà"),
+    ("déja", "déjà"),
+    ("dévelopement", "développement"),
+    ("developpement", "développement"),
+    ("environement", "environnement"),
+    ("etre", "être"),
+    ("evenement", "événement"),
+    ("exemle", "exemple"),
+    ("fesait", "faisait"),
+    ("garcon", "garçon"),
+    ("interessant", "intéressant"),
+    ("jai", "j'ai"),
+    ("malgrés", "malgré"),
+    ("meme", "même"),
+    ("parceque", "parce que"),
+    ("peutetre", "peut-être"),
+    ("plusieures", "plusieurs"),
+    ("probleme", "problème"),
+    ("quil", "qu'il"),
+    ("recu", "reçu"),
+    ("rapellé", "rappelé"),
+    ("rapeler", "rappeler"),
+    ("reponse", "réponse"),
+    ("sil", "s'il"),
+    ("tres", "très"),
+    ("téléphonne", "téléphone"),
+    ("voila", "voilà"),
+    ("(c)", "©"),
+    ("(r)", "®"),
+    ("(tm)", "™"),
+    ("(e)", "€"),
+    ("...", "…"),
+    ("->", "→"),
+    ("<-", "←"),
+    ("=>", "⇒"),
+    ("--", "–"),
+];
+
+static FRENCH: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Lusk Diapo : la correction automatique en français (`true`) ou en anglais.
+pub fn set_french(on: bool) {
+    FRENCH.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+
+fn french() -> bool {
+    FRENCH.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// The built-in list for the interface's language.
+pub fn builtin() -> &'static [(&'static str, &'static str)] {
+    if french() { AUTOCORRECT_FR } else { AUTOCORRECT }
+}
+
 const DAYS: &[&str] = &["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
 
 /// The replacement for `word` from your entries, then the built-in list.
@@ -79,7 +143,7 @@ fn replacement(prefs: &crate::Prefs, word: &str) -> Option<String> {
     if let Some((_, to)) = prefs.ac_entries.iter().find(|(k, _)| k.eq_ignore_ascii_case(word)) {
         return Some(to.clone());
     }
-    let (k, to) = AUTOCORRECT.iter().find(|(k, _)| k.eq_ignore_ascii_case(word))?;
+    let (k, to) = builtin().iter().find(|(k, _)| k.eq_ignore_ascii_case(word))?;
     if prefs.ac_removed.iter().any(|r| r.eq_ignore_ascii_case(k)) {
         return None;
     }
@@ -123,7 +187,7 @@ pub fn correct_word(prefs: &crate::Prefs, word: &str, sentence_start: bool, typi
                 );
             }
         }
-        if out.is_none() && prefs.ac_days && DAYS.contains(&word) {
+        if out.is_none() && prefs.ac_days && !french() && DAYS.contains(&word) {
             out = Some(ed::change_case(word, "sentence"));
         }
     }
@@ -188,8 +252,14 @@ pub(super) fn autocorrect(s: &mut Session, typing: bool) -> Result<()> {
         correct_word(&s.prefs, &word, sentence_start, typing)
     };
     let Some(rep) = rep else {
-        if typing && s.prefs.ac_ordinals && is_ordinal(&word) {
-            return superscript_suffix(s, &t, word_end);
+        if typing && s.prefs.ac_ordinals {
+            if french() {
+                if let Some(n) = french_ordinal_suffix(&word) {
+                    return superscript_suffix(s, &t, word_end, n);
+                }
+            } else if is_ordinal(&word) {
+                return superscript_suffix(s, &t, word_end, 2);
+            }
         }
         return Ok(());
     };
@@ -308,9 +378,26 @@ fn is_ordinal(word: &str) -> bool {
     suffix == want
 }
 
-/// Superscript the two letters before `end` in the caret's paragraph (an ordinal's suffix).
-fn superscript_suffix(s: &mut Session, t: &crate::TextSel, end: usize) -> Result<()> {
-    let (a, b) = ((t.caret.0, end.saturating_sub(2)), (t.caret.0, end));
+/// Lusk Diapo : la longueur du suffixe d'un ordinal français (« 1er », « 1re », « 2e », « 2nd »,
+/// « 2nde »), à mettre en exposant.
+fn french_ordinal_suffix(word: &str) -> Option<usize> {
+    let digits = word.trim_end_matches(|c: char| c.is_alphabetic());
+    let suffix = word.get(digits.len()..).unwrap_or_default();
+    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let ok = match suffix {
+        "er" | "re" | "ère" => digits == "1",
+        "nd" | "nde" => digits == "2",
+        "e" => digits != "1",
+        _ => false,
+    };
+    ok.then(|| suffix.chars().count())
+}
+
+/// Superscript the `n` letters before `end` in the caret's paragraph (an ordinal's suffix).
+fn superscript_suffix(s: &mut Session, t: &crate::TextSel, end: usize, n: usize) -> Result<()> {
+    let (a, b) = ((t.caret.0, end.saturating_sub(n)), (t.caret.0, end));
     let st = s.doc_mut()?;
     if body_of(st, t).is_none_or(|body| ed::props_at(body, b).baseline.unwrap_or(0.0) > 0.0) {
         return Ok(());
@@ -360,7 +447,7 @@ pub(super) fn autocorrect_options(s: &mut Session, p: &Value) -> Result<Value> {
         let had = pr.ac_entries.len();
         pr.ac_entries.retain(|(k, _)| k != from);
         if had == pr.ac_entries.len()
-            && AUTOCORRECT.iter().any(|(k, _)| k.eq_ignore_ascii_case(from))
+            && builtin().iter().any(|(k, _)| k.eq_ignore_ascii_case(from))
             && !pr.ac_removed.iter().any(|r| r.eq_ignore_ascii_case(from))
         {
             pr.ac_removed.push(from.to_string());
@@ -371,7 +458,7 @@ pub(super) fn autocorrect_options(s: &mut Session, p: &Value) -> Result<Value> {
         .iter()
         .cloned()
         .chain(
-            AUTOCORRECT
+            builtin()
                 .iter()
                 .filter(|(k, _)| {
                     !pr.ac_removed.iter().any(|r| r.eq_ignore_ascii_case(k)) && !pr.ac_entries.iter().any(|(e, _)| e.eq_ignore_ascii_case(k))
@@ -384,4 +471,29 @@ pub(super) fn autocorrect_options(s: &mut Session, p: &Value) -> Result<Value> {
         "days": pr.ac_days, "capsLock": pr.ac_caps_lock, "fractions": pr.ac_fractions,
         "ordinals": pr.ac_ordinals, "lists": pr.ac_lists, "entries": list,
     }))
+}
+
+#[cfg(test)]
+mod french_tests {
+    use super::*;
+
+    #[test]
+    fn french_ordinals() {
+        assert_eq!(french_ordinal_suffix("1er"), Some(2));
+        assert_eq!(french_ordinal_suffix("1re"), Some(2));
+        assert_eq!(french_ordinal_suffix("2e"), Some(1));
+        assert_eq!(french_ordinal_suffix("21e"), Some(1));
+        assert_eq!(french_ordinal_suffix("2nde"), Some(3));
+        assert_eq!(french_ordinal_suffix("1e"), None);
+        assert_eq!(french_ordinal_suffix("3er"), None);
+        assert_eq!(french_ordinal_suffix("e"), None);
+    }
+
+    #[test]
+    fn the_french_list_has_no_duplicate() {
+        let mut seen = std::collections::HashSet::new();
+        for (k, _) in AUTOCORRECT_FR {
+            assert!(seen.insert(k.to_lowercase()), "{k}");
+        }
+    }
 }

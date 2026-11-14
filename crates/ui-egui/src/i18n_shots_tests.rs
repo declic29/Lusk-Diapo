@@ -77,7 +77,22 @@ fn i18n_shots() {
             app.ui.pane = Some("format".into());
         });
     }
-    for page in ["home", "new", "open", "info", "saveAs", "print", "export", "about"] {
+    if want("volet-idees-vide") {
+        shoot(&dir, "volet-idees-vide", |app| {
+            let _ = app.session.execute("file.new", &json!({}));
+            app.ui.pane = Some("designer".into());
+        });
+    }
+    if want("idee-appliquee") {
+        shoot(&dir, "idee-appliquee", |app| {
+            let _ = app.session.execute("file.new", &json!({}));
+            let _ = app.run("design.applyIdea", json!({"id": "lusk:cartes"}));
+        });
+    }
+    if want("palette") {
+        shoot(&dir, "palette", |app| app.palette = Some(("police".into(), 0)));
+    }
+    for page in ["home", "new", "open", "info", "saveAs", "print", "export", "about", "updates"] {
         let name = format!("fichier-{page}");
         if want(&name) {
             shoot(&dir, &name, |app| {

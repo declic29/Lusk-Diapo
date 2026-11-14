@@ -117,6 +117,8 @@ fn new(s: &mut Session, p: &Value) -> Result<Value> {
         let theme = theme_name.and_then(theme_named).unwrap_or_default();
         (defaults::blank_presentation(size, theme, !bool_or(p, "blank", false)), None)
     };
+    let mut doc = doc;
+    crate::frenchify(&mut doc);
     let slides = doc.slides.len();
     let title = s.next_untitled();
     let i = s.add_document(DocState::new(doc, None, title));

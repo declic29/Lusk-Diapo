@@ -48,10 +48,12 @@ pub enum Page {
     Print,
     Export,
     About,
+    /// Lusk Diapo : la version installée et la recherche de mises à jour, comme Lusk Texte et Lusk Tab.
+    Updates,
 }
 
 impl Page {
-    pub const ALL: [Page; 8] = [Page::Home, Page::New, Page::Open, Page::Info, Page::SaveAs, Page::Print, Page::Export, Page::About];
+    pub const ALL: [Page; 9] = [Page::Home, Page::New, Page::Open, Page::Info, Page::SaveAs, Page::Print, Page::Export, Page::About, Page::Updates];
 
     /// The id `app.backstage {page}` takes.
     pub fn id(self) -> &'static str {
@@ -64,6 +66,7 @@ impl Page {
             Page::Print => "print",
             Page::Export => "export",
             Page::About => "about",
+            Page::Updates => "updates",
         }
     }
 
@@ -87,6 +90,7 @@ impl Page {
             Page::Print => "Print",
             Page::Export => "Export",
             Page::About => "About",
+            Page::Updates => "Updates",
         }
     }
 
@@ -100,6 +104,7 @@ impl Page {
             Page::Print => Icon::Print,
             Page::Export => Icon::Export,
             Page::About => Icon::Help,
+            Page::Updates => Icon::Redo,
         }
     }
 
@@ -144,7 +149,7 @@ pub fn entries(has_doc: bool) -> (Vec<Nav>, Vec<Nav>) {
     if has_doc {
         top.extend([Nav::Page(Page::Info), Nav::Save, Nav::Page(Page::SaveAs), Nav::Page(Page::Print), Nav::Page(Page::Export), Nav::Close]);
     }
-    (top, vec![Nav::Page(Page::About), Nav::Options])
+    (top, vec![Nav::Page(Page::About), Nav::Options, Nav::Page(Page::Updates)])
 }
 
 /// Print page: which slides.
@@ -418,6 +423,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
                     Page::Print => print(app, ui, &mut bs),
                     Page::Export => export(app, ui, &mut bs),
                     Page::About => about(app, ui),
+                    Page::Updates => crate::dialogs::updates_ui::page(app, ui),
                 }
             });
         });
@@ -452,7 +458,13 @@ fn nav_item(ui: &mut Ui, nav: Nav, bs: &Backstage, index: usize, t: &Tokens) -> 
         p.rect_stroke(row, CornerRadius::same(2), Stroke::new(1.0, ink), StrokeKind::Inside);
     }
     let ink = if selected { t.accent } else { t.text };
-    icons::paint(p, Rect::from_center_size(pos2(rect.left() + 26.0, rect.center().y), vec2(16.0, 16.0)), nav.icon(), ink, false);
+    let icon_rect = Rect::from_center_size(pos2(rect.left() + 26.0, rect.center().y), vec2(16.0, 16.0));
+    if nav == Nav::Page(Page::About) {
+        // Lusk Diapo : la tête du renard de Lusk pour l'À propos, comme Lusk Texte et Lusk Tab.
+        crate::dialogs::about::paint_fox(p, icon_rect.expand(3.0));
+    } else {
+        icons::paint(p, icon_rect, nav.icon(), ink, false);
+    }
     p.text(pos2(rect.left() + 44.0, rect.center().y), Align2::LEFT_CENTER, label, theme::font(13.0), ink);
     resp
 }

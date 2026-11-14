@@ -337,7 +337,7 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                 let r = icon_toggle(ui, Icon::LineSpacing, "Line Spacing", en, false);
                 egui::Popup::menu(&r).show(|ui| {
                     for v in [1.0, 1.5, 2.0, 2.5, 3.0] {
-                        if ui.button(format!("{v:.1}")).clicked() {
+                        if ui.button(deckcraft_engine::geom::decimal(&format!("{v:.1}"))).clicked() {
                             run(app, "format.lineSpacing", json!({"lines": v}));
                         }
                     }

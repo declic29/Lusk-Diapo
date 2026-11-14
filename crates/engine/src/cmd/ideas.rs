@@ -37,10 +37,15 @@ struct Roles {
     text: Vec<usize>,
 }
 
+/// Whether `s` belongs to a Lusk look's décor.
+fn is_look(s: &Shape) -> bool {
+    s.tags.iter().any(|(k, _)| k == LOOK_TAG)
+}
+
 fn roles(shapes: &[Shape]) -> Roles {
     let mut r = Roles { title: None, picture: None, text: vec![] };
     for (i, s) in shapes.iter().enumerate() {
-        if s.hidden {
+        if s.hidden || is_look(s) {
             continue;
         }
         if s.ph.as_ref().is_some_and(|p| p.kind.is_title()) && r.title.is_none() {
@@ -89,7 +94,8 @@ fn arrangeable(ctx: Option<&Ctx>, s: &Shape) -> bool {
 pub fn ideas_for(doc: &Presentation, index: usize) -> Vec<Idea> {
     let Some(slide) = doc.slides.get(index) else { return vec![] };
     let ctx = Ctx::for_slide(doc, slide);
-    if slide.shapes.iter().any(|s| !s.hidden && !arrangeable(ctx.as_ref(), s)) {
+    // A Lusk look's décor stays where it is: it doesn't hold back the arrangements.
+    if slide.shapes.iter().any(|s| !s.hidden && !is_look(s) && !arrangeable(ctx.as_ref(), s)) {
         return vec![];
     }
     // The ideas move one picture; a second would stay put, over the rearranged text.
@@ -136,8 +142,162 @@ fn is_band(f: &Fill) -> bool {
     *f == band_fill() || *f == legacy_band_fill()
 }
 
+/// Lusk Diapo : des conceptions originales, proposées pour toute diapositive (même vide) : un
+/// fond, un décor discret placé derrière le contenu, et la couleur des textes qui va avec. Les
+/// formes du décor portent la balise `lusk-look` : changer de conception remplace l'ancienne.
+pub const LOOKS: [Idea; 8] = [
+    ("lusk:aurore", "Aurore"),
+    ("lusk:ocean", "Océan"),
+    ("lusk:agrume", "Agrume"),
+    ("lusk:ardoise", "Ardoise"),
+    ("lusk:prairie", "Prairie"),
+    ("lusk:cartes", "Cartes"),
+    ("lusk:minuit", "Minuit"),
+    ("lusk:kraft", "Kraft"),
+];
+
+const LOOK_TAG: &str = "lusk-look";
+
+fn rgb(hex: u32) -> deckcraft_model::ColorRef {
+    deckcraft_model::ColorRef::rgb(Rgba::rgb((hex >> 16) as u8, (hex >> 8) as u8, hex as u8))
+}
+
+fn gradient(angle: f64, from: u32, to: u32) -> Fill {
+    Fill::Gradient(deckcraft_model::style::Gradient {
+        stops: vec![
+            deckcraft_model::style::GradientStop { pos: 0.0, color: rgb(from) },
+            deckcraft_model::style::GradientStop { pos: 1.0, color: rgb(to) },
+        ],
+        shape: deckcraft_model::style::GradientShape::Linear { angle, scaled: false },
+        flip: None,
+        rotate_with_shape: true,
+        tile: [0.0; 4],
+    })
+}
+
+/// One shape of a look's décor: `preset` in box `x` (rotated `rot` degrees), filled with `fill`
+/// (or outlined with `line` when `fill` is `None`).
+fn decor(preset: &str, x: Xfrm, rot: f64, fill: Option<Fill>, line: Option<(u32, f64)>) -> Shape {
+    Shape {
+        name: "Décor".into(),
+        xfrm: Some(Xfrm { rot, ..x }),
+        geom: deckcraft_model::Geom::preset(preset),
+        fill: Some(fill.unwrap_or(Fill::None)),
+        line: Some(match line {
+            Some((c, w)) => deckcraft_model::style::Line::solid(rgb(c), w),
+            None => deckcraft_model::style::Line::none(),
+        }),
+        decorative: true,
+        tags: vec![(LOOK_TAG.into(), "1".into())],
+        ..Default::default()
+    }
+}
+
+/// The background, décor and text colour of look `id` for a `sw` × `sh` slide.
+fn look(id: &str, sw: f64, sh: f64) -> Option<(Fill, Vec<Shape>, u32)> {
+    let r = |x: f64, y: f64, w: f64, h: f64| Xfrm::new(x * sw, y * sh, w * sw, h * sh);
+    let sq = |cx: f64, cy: f64, d: f64| Xfrm::new(cx * sw - d * sh / 2.0, cy * sh - d * sh / 2.0, d * sh, d * sh);
+    let solid = |c: u32| Some(Fill::solid(rgb(c)));
+    Some(match id {
+        "lusk:aurore" => (
+            gradient(45.0, 0x1B1F3B, 0x3A2C5F),
+            vec![decor("rect", r(0.0, 0.86, 1.0, 0.14), 0.0, Some(gradient(0.0, 0xFF5F8F, 0xF77C32)), None)],
+            0xFFFFFF,
+        ),
+        "lusk:ocean" => (
+            gradient(90.0, 0x0EA5B7, 0x1E3A8A),
+            vec![
+                decor("rect", r(0.40, 0.72, 0.20, 0.006), 0.0, solid(0xFFFFFF), None),
+                decor("ellipse", sq(0.95, 0.9, 0.55), 0.0, None, Some((0x7FE3EE, 1.5))),
+            ],
+            0xFFFFFF,
+        ),
+        "lusk:agrume" => (
+            Fill::solid(rgb(0xFFF8EE)),
+            vec![
+                decor("ellipse", sq(0.93, 0.05, 0.75), 0.0, solid(0xF77C32), None),
+                decor("ellipse", sq(0.04, 0.98, 0.28), 0.0, solid(0xFFC94D), None),
+            ],
+            0x3B2A1A,
+        ),
+        "lusk:ardoise" => (
+            Fill::solid(rgb(0x2B2F36)),
+            vec![
+                decor("rect", r(0.0, 0.0, 0.022, 1.0), 0.0, solid(0xF77C32), None),
+                decor("rect", r(0.06, 0.93, 0.12, 0.006), 0.0, solid(0xF77C32), None),
+            ],
+            0xF3F4F6,
+        ),
+        "lusk:prairie" => (
+            Fill::solid(rgb(0xF1F8EC)),
+            vec![
+                decor("wave", r(-0.05, 0.80, 1.1, 0.28), 0.0, solid(0xB7E07F), None),
+                decor("wave", r(-0.05, 0.86, 1.1, 0.24), 0.0, solid(0x7BC143), None),
+            ],
+            0x1F3A14,
+        ),
+        "lusk:cartes" => (
+            Fill::solid(rgb(0xFFFFFF)),
+            vec![
+                decor("roundRect", sq(0.89, 0.88, 0.28), -14.0, solid(0xF06BA8), None),
+                decor("roundRect", sq(0.915, 0.865, 0.28), -4.0, solid(0x8E6CEF), None),
+                decor("roundRect", sq(0.94, 0.85, 0.28), 7.0, solid(0x2EC4E6), None),
+            ],
+            0x2A2440,
+        ),
+        "lusk:minuit" => {
+            (gradient(90.0, 0x120C2E, 0x3B1D6E), vec![decor("rect", r(0.03, 0.05, 0.94, 0.90), 0.0, None, Some((0xE8C26A, 1.5)))], 0xFDF6E3)
+        }
+        "lusk:kraft" => (
+            Fill::solid(rgb(0xE9DCC3)),
+            vec![
+                decor("rect", r(0.025, 0.045, 0.95, 0.91), 0.0, None, Some((0x7A5C3E, 1.0))),
+                decor("rtTriangle", r(0.86, 0.80, 0.115, 0.155), 180.0, solid(0xB08A5B), None),
+            ],
+            0x4A3520,
+        ),
+        _ => return None,
+    })
+}
+
+/// Applies Lusk look `id` to slide `index`: background, décor (replacing a former look's) and
+/// the colour of every placeholder's text.
+fn apply_look(doc: &mut Presentation, index: usize, id: &str) -> Result<()> {
+    let (sw, sh) = (doc.slide_size.width.max(1.0), doc.slide_size.height.max(1.0));
+    let (bg, shapes, ink) = look(id, sw, sh).ok_or_else(|| bad("design.applyIdea", format!("no idea `{id}`")))?;
+    let mut shapes = shapes;
+    for sh in &mut shapes {
+        sh.id = deckcraft_model::ShapeId(doc.alloc_id().ok_or_else(|| bad("design.applyIdea", "no shape id left"))?);
+    }
+    let slide = doc.slides.get_mut(index).ok_or_else(|| bad("design.applyIdea", "no slide"))?;
+    let slide = std::sync::Arc::make_mut(slide);
+    slide.shapes.retain(|s| !s.tags.iter().any(|(k, _)| k == LOOK_TAG));
+    slide.background = Some(deckcraft_model::Background::Fill { fill: bg });
+    for s in &mut slide.shapes {
+        if s.ph.is_none() {
+            continue;
+        }
+        let body = s.text.get_or_insert_with(|| deckcraft_model::text::TextBody { paragraphs: vec![Default::default()], ..Default::default() });
+        let levels = &mut body.list_style.levels;
+        if levels.len() < 5 {
+            levels.resize(5, None);
+        }
+        for l in levels.iter_mut().take(5) {
+            l.get_or_insert_with(Default::default).run.fill = Some(Fill::solid(rgb(ink)));
+        }
+    }
+    // The décor sits behind everything else on the slide.
+    for (k, sh) in shapes.into_iter().enumerate() {
+        slide.shapes.insert(k, sh);
+    }
+    Ok(())
+}
+
 /// Apply idea `id` to slide `index` of `doc` (`sel` resolves inherited placeholder boxes).
 pub fn apply_idea(doc: &mut Presentation, sel: &Selection, index: usize, id: &str) -> Result<()> {
+    if id.starts_with("lusk:") {
+        return apply_look(doc, index, id);
+    }
     if !ideas_for(doc, index).iter().any(|i| i.0 == id) {
         return Err(bad("design.applyIdea", format!("no idea `{id}` for this slide (see design.ideas)")));
     }
@@ -556,5 +716,30 @@ mod tests {
         let c = cover_crop(1.0, 2.0);
         assert!((c[1] - 0.25).abs() < 1e-12 && c[0] == 0.0);
         assert_eq!(cover_crop(f64::NAN, 1.0), [0.0; 4]);
+    }
+}
+
+#[cfg(test)]
+mod look_tests {
+    use super::*;
+
+    /// Every Lusk look applies to a blank title slide, and a second look replaces the first's
+    /// décor instead of piling up.
+    #[test]
+    fn lusk_looks_apply_and_replace_each_other() {
+        let mut s = Session::with_new();
+        for (id, _) in LOOKS {
+            s.execute("design.applyIdea", &json!({"id": id})).unwrap();
+            let st = s.active().unwrap();
+            let slide = &st.doc.slides[st.selection.slide];
+            assert!(matches!(slide.background, Some(deckcraft_model::Background::Fill { .. })), "{id}");
+            let decor = slide.shapes.iter().filter(|s| is_look(s)).count();
+            let (_, expected, _) = look(id, st.doc.slide_size.width, st.doc.slide_size.height).unwrap();
+            assert_eq!(decor, expected.len(), "{id}: only this look's décor");
+            // The décor is behind the placeholders, and marked decorative for screen readers.
+            assert!(slide.shapes.iter().take(decor).all(|s| is_look(s) && s.decorative), "{id}");
+        }
+        // One undo step per look.
+        s.execute("edit.undo", &json!({})).unwrap();
     }
 }

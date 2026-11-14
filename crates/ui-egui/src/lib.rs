@@ -509,4 +509,6 @@ mod host_save_tests;
 #[cfg(test)]
 mod i18n_shots_tests;
 #[cfg(test)]
+mod ribbon_sweep_tests;
+#[cfg(test)]
 mod tests;

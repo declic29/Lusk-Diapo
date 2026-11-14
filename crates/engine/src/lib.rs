@@ -465,6 +465,78 @@ pub struct SourceTheme {
     pub fonts: deckcraft_model::theme::FontScheme,
 }
 
+static FRENCH_DOCUMENTS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Lusk Diapo : les nouvelles présentations en français (`true`) : « Présentation1 », noms des
+/// dispositions et textes du masque comme dans PowerPoint en français.
+/// The name of the `n`th new presentation.
+fn untitled_name(n: u32, french: bool) -> String {
+    if french { format!("Présentation{n}") } else { format!("Presentation{n}") }
+}
+
+pub fn set_french_documents(on: bool) {
+    FRENCH_DOCUMENTS.store(on, std::sync::atomic::Ordering::Relaxed);
+}
+
+fn french_documents() -> bool {
+    FRENCH_DOCUMENTS.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// Lusk Diapo : met en français les noms des dispositions et les textes d'exemple du masque d'une
+/// présentation qu'on vient de créer (rien quand les nouvelles présentations sont en anglais).
+pub fn frenchify(doc: &mut deckcraft_model::Presentation) {
+    if french_documents() {
+        french_names(doc);
+    }
+}
+
+/// The work of [`frenchify`], whatever the switch.
+fn french_names(doc: &mut deckcraft_model::Presentation) {
+    const NAMES: [(&str, &str); 11] = [
+        ("Title Slide", "Diapositive de titre"),
+        ("Title and Content", "Titre et contenu"),
+        ("Section Header", "En-tête de section"),
+        ("Two Content", "Deux contenus"),
+        ("Comparison", "Comparaison"),
+        ("Title Only", "Titre seul"),
+        ("Blank", "Vide"),
+        ("Content with Caption", "Contenu avec légende"),
+        ("Picture with Caption", "Image avec légende"),
+        ("Title and Vertical Text", "Titre et texte vertical"),
+        ("Vertical Title and Text", "Titre vertical et texte"),
+    ];
+    const TEXTS: [(&str, &str); 7] = [
+        ("Click to edit Master title style", "Modifiez le style du titre"),
+        ("Click to edit Master text styles", "Modifiez les styles du texte du masque"),
+        ("Second level", "Deuxième niveau"),
+        ("Third level", "Troisième niveau"),
+        ("Fourth level", "Quatrième niveau"),
+        ("Fifth level", "Cinquième niveau"),
+        ("Click to edit Master subtitle style", "Modifiez le style des sous-titres du masque"),
+    ];
+    let fix_text = |shapes: &mut [deckcraft_model::Shape]| {
+        for sh in shapes {
+            for para in sh.text.iter_mut().flat_map(|t| t.paragraphs.iter_mut()) {
+                for run in &mut para.runs {
+                    if let Some((_, fr)) = TEXTS.iter().find(|(en, _)| *en == run.text) {
+                        run.text = (*fr).into();
+                    }
+                }
+            }
+        }
+    };
+    for m in &mut doc.masters {
+        let m = std::sync::Arc::make_mut(m);
+        fix_text(&mut m.shapes);
+        for l in &mut m.layouts {
+            if let Some((_, fr)) = NAMES.iter().find(|(en, _)| *en == l.name) {
+                l.name = (*fr).into();
+            }
+            fix_text(&mut l.shapes);
+        }
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Clipboard {
     pub shapes: Vec<Shape>,
@@ -628,7 +700,7 @@ impl Session {
     }
     pub fn next_untitled(&mut self) -> String {
         self.untitled += 1;
-        format!("Presentation{}", self.untitled)
+        untitled_name(self.untitled, french_documents())
     }
 
     /// Run command `id`. A panic inside it becomes [`EngineError::Internal`] and leaves the

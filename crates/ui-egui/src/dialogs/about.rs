@@ -71,6 +71,12 @@ pub fn paint_wordmark(p: &egui::Painter, r: Rect) {
     paint_png(p, "lusk_diapo_logo", include_bytes!("../../../../assets/app-icon/lusk-diapo-logo.png"), r);
 }
 
+/// La tête du renard de Lusk (`assets/avatar/lusk-renard-tete.png`), dans ses couleurs, au centre
+/// de `r` : l'icône de l'À propos.
+pub fn paint_fox(p: &egui::Painter, r: Rect) {
+    paint_png(p, "lusk_fox_head", include_bytes!("../../../../assets/avatar/lusk-renard-tete.png"), r);
+}
+
 /// Draws an embedded PNG fitted in `r` (proportions kept). The texture is decoded once per name.
 fn paint_png(p: &egui::Painter, name: &'static str, png: &'static [u8], r: Rect) {
     let ctx = p.ctx();

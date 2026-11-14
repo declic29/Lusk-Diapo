@@ -97,6 +97,8 @@ pub struct UiState {
     /// Lusk Diapo : les réglages français (centimètres, nom « Utilisateur ») ont été appliqués
     /// une fois, au premier démarrage en français ; ensuite, ceux que vous choisissez restent.
     pub lusk_fr: bool,
+    /// Rechercher les mises à jour au démarrage (Fichier › Mises à jour).
+    pub check_updates_at_start: bool,
 }
 
 impl Default for UiState {
@@ -106,6 +108,7 @@ impl Default for UiState {
             tab: "Home".into(),
             ribbon_collapsed: false,
             lusk_fr: false,
+            check_updates_at_start: true,
             view: ViewMode::Normal,
             notes: true,
             notes_height: 52.0,

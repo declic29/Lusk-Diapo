@@ -23,7 +23,7 @@ mod ime;
 mod layout;
 
 use autocorrect::autocorrect_options;
-pub use autocorrect::{AUTOCORRECT, AutoList, correct_word};
+pub use autocorrect::{AUTOCORRECT, AUTOCORRECT_FR, AutoList, correct_word, set_french as set_french_autocorrect};
 pub(crate) use caret::{apply_leading_tabs, delete_dir};
 use caret::{delete, delete_surrounding, get, insert, move_caret, select, select_all, select_para, select_word, set};
 use editing::{edit, exit};

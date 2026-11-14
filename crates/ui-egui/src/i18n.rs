@@ -23,6 +23,10 @@ pub fn set_french(on: bool) {
     FRENCH.store(on, Ordering::Relaxed);
     // Les invites des espaces réservés vides (« Cliquez pour ajouter un titre ») suivent.
     deckcraft_model::set_french_prompts(on);
+    // La correction automatique et les nouvelles présentations aussi.
+    deckcraft_engine::cmd::text::set_french_autocorrect(on);
+    deckcraft_engine::set_french_documents(on);
+    deckcraft_engine::geom::set_decimal_comma(on);
 }
 
 thread_local! {

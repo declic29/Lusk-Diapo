@@ -7484,3 +7484,17 @@ fn shape_adjust_and_quick_style_reject_invalid_index() {
     assert_eq!(s.doc().unwrap().shape(id).unwrap().style, before.style);
     s.execute("shape.adjust", &json!({"value": 0.4})).unwrap();
 }
+
+/// Lusk Diapo: in French, a new presentation is « Présentation1 » and its layouts and master
+/// sample text are in French.
+#[test]
+fn new_presentations_in_french() {
+    let mut doc = deckcraft_model::defaults::new_presentation(None);
+    crate::french_names(&mut doc);
+    assert_eq!(crate::untitled_name(1, true), "Présentation1");
+    assert_eq!(crate::untitled_name(2, false), "Presentation2");
+    let names: Vec<&str> = doc.masters[0].layouts.iter().map(|l| l.name.as_str()).collect();
+    assert!(names.contains(&"Diapositive de titre") && names.contains(&"Titre et contenu"), "{names:?}");
+    let master_text: String = doc.masters[0].shapes.iter().filter_map(|s| s.text.as_ref()).map(|t| t.text()).collect::<Vec<_>>().join("|");
+    assert!(master_text.contains("Modifiez le style du titre"), "{master_text}");
+}

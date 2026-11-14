@@ -207,7 +207,7 @@ fn text_row(ui: &mut Ui, d: &mut Dialog, label: &str, key: &str) {
 
 use deckcraft_text::datetime::DATE_KINDS;
 
-mod about;
+pub(crate) mod about;
 mod alt_text;
 mod body;
 mod columns;
@@ -305,7 +305,7 @@ pub mod credits;
 #[cfg(test)]
 mod font_dialog_tests;
 #[cfg(not(target_arch = "wasm32"))]
-pub(super) mod updates_ui;
+pub(crate) mod updates_ui;
 
 #[cfg(test)]
 mod size_position_tests;

@@ -104,6 +104,9 @@ fn palette_items(session: &deckcraft_engine::Session, q: &str) -> Vec<(String, S
         .into_iter()
         // Commands that need a path or other value fail when the palette runs them with `{}`.
         .filter(|c| c.enabled && !crate::UI_COMMANDS.iter().any(|u| u.1 == c.label) && !deckcraft_engine::cmd::needs_arguments(c.params))
+        // Lusk Diapo : les commandes qui ne font que lire (galeries, inspections, listes) servent
+        // aux scripts ; lancées d'ici, elles ne montreraient rien.
+        .filter(|c| deckcraft_engine::command_specs().iter().find(|s| s.id == c.id).is_none_or(|s| s.journal))
         .map(|c| (c.id.to_string(), c.label.to_string(), c.shortcut))
         .chain(crate::UI_COMMANDS.iter().filter(|c| !deckcraft_engine::cmd::needs_arguments(c.3)).map(|c| (c.0.to_string(), c.1.to_string(), c.2)))
         .filter(|(id, label, _)| {
@@ -120,11 +123,14 @@ pub fn palette(app: &mut SlideApp, ctx: &egui::Context) {
     let Some((mut query, mut sel)) = app.palette.take() else { return };
     let t = Tokens::get(ctx);
     let mut close = false;
-    let mut run: Option<String> = None;
-    egui::Window::new("command_palette")
-        .title_bar(false)
+    let mut open = true;
+    let mut run: Option<(String, String)> = None;
+    egui::Window::new(crate::i18n::tr("Command Palette"))
+        .id(egui::Id::unique("command_palette"))
+        .open(&mut open)
+        .collapsible(false)
         .anchor(egui::Align2::CENTER_TOP, egui::vec2(0.0, 90.0))
-        .fixed_size(egui::vec2(520.0, 380.0))
+        .fixed_size(egui::vec2(560.0, 400.0))
         .show(ctx, |ui| {
             let r = ui.add(
                 egui::TextEdit::singleline(&mut query)
@@ -152,28 +158,54 @@ pub fn palette(app: &mut SlideApp, ctx: &egui::Context) {
             if esc {
                 close = true;
             }
-            if enter && let Some((id, ..)) = items.get(sel) {
-                run = Some(id.clone());
+            if enter && let Some((id, label, _)) = items.get(sel) {
+                run = Some((id.clone(), label.clone()));
             }
+            ui.label(
+                egui::RichText::new(crate::i18n::tr("Type a few letters, then click a command or press Enter to run it."))
+                    .font(theme::font(11.5))
+                    .color(t.text_dim),
+            );
             egui::ScrollArea::vertical().max_height(320.0).show(ui, |ui| {
                 for (k, (id, label, sc)) in items.iter().enumerate() {
+                    // Where the command lives (« Accueil › Police »), then its shortcut.
+                    let place = deckcraft_engine::command_specs()
+                        .iter()
+                        .find(|c| c.id == id)
+                        .map(|c| c.menu.iter().map(|m| crate::i18n::tr(m)).collect::<Vec<_>>().join(" › "))
+                        .unwrap_or_default();
                     let r = ui.horizontal(|ui| {
                         let resp = ui.selectable_label(k == sel, crate::i18n::trs(label));
-                        if let Some(s) = sc {
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                            if let Some(s) = sc {
                                 ui.label(egui::RichText::new(crate::ribbon::pretty_shortcut(s)).color(t.text_faint));
-                            });
-                        }
+                            }
+                            if !place.is_empty() {
+                                ui.label(egui::RichText::new(&place).font(theme::font(11.0)).color(t.text_faint));
+                            }
+                        });
                         resp
                     });
                     if r.inner.clicked() {
-                        run = Some(id.clone());
+                        run = Some((id.clone(), label.clone()));
                     }
                 }
             });
         });
-    if let Some(id) = run {
-        let _ = app.run(&id, json!({}));
+    if let Some((id, label)) = run {
+        // Lusk Diapo : la barre d'état dit ce qui s'est passé, et pourquoi quand rien n'a pu être fait.
+        let name = crate::i18n::tr(&label).trim_end_matches('…').to_string();
+        match app.run(&id, json!({})) {
+            Ok(_) => {
+                if app.dialog.is_none() && app.backstage.is_none() {
+                    app.set_status(crate::i18n::trf("“{0}” done", &[&name]));
+                }
+            }
+            Err(e) => app.set_status(crate::i18n::trf("Couldn't run “{0}”: {1}", &[&name, &crate::i18n::tr(&e)])),
+        }
+        close = true;
+    }
+    if !open {
         close = true;
     }
     if !close {

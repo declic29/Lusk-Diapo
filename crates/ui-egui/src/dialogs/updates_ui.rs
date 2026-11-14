@@ -49,7 +49,7 @@ pub(crate) fn tick(app: &mut SlideApp, ctx: &egui::Context) {
     let rt = &mut app.updates_rt;
     if std::mem::take(&mut rt.check_requested) {
         rt.updater.check_now(ctx);
-    } else if rt.enabled {
+    } else if rt.enabled && app.ui.check_updates_at_start {
         rt.updater.check_at_start(ctx);
     }
     rt.updater.tick(ctx);
@@ -71,6 +71,61 @@ pub(crate) fn show(app: &mut SlideApp, ctx: &egui::Context) {
         let response = CheckResultDialog::new(&crate::UPDATE_APP, VERSION).with_translator(translate).show(ctx, rt.updater.status());
         answer(rt, response);
     }
+}
+
+/// Fichier › Mises à jour : la version installée, la recherche et son résultat, le réglage de la
+/// recherche au démarrage (repris de Lusk Tab).
+pub(crate) fn page(app: &mut SlideApp, ui: &mut egui::Ui) {
+    let t = crate::theme::Tokens::get(ui.ctx());
+    let text = |ui: &mut egui::Ui, s: &str| {
+        ui.add(egui::Label::new(egui::RichText::new(s).font(crate::theme::font(13.0)).color(t.text)).wrap());
+    };
+    ui.label(egui::RichText::new(format!("Lusk Diapo {VERSION}")).font(crate::theme::bold(16.0)).color(t.text));
+    text(ui, "Version installée sur cet ordinateur.");
+    ui.add_space(20.0);
+    let status = app.updates_rt.updater.status().clone();
+    let checking = matches!(status, Status::Checking);
+    ui.horizontal(|ui| {
+        if ui.add_enabled(!checking, egui::Button::new("Rechercher des mises à jour").min_size(egui::vec2(0.0, 30.0))).clicked() {
+            request_check(app);
+        }
+        if checking {
+            ui.add(egui::Spinner::new());
+            ui.label("Recherche en cours…");
+        }
+    });
+    let outcome = match &status {
+        Status::UpToDate => Some(format!("Vous avez la dernière version de Lusk Diapo ({VERSION}).")),
+        Status::Failed(e) if e == "no releases yet" => Some("Aucune version n'a encore été publiée sur GitHub.".to_string()),
+        Status::Failed(e) => Some(format!("La recherche n'a pas abouti. Vérifiez la connexion à Internet, puis réessayez.\n(Détail : {e})")),
+        Status::Installing => Some("Une nouvelle version est en cours de téléchargement et d'installation.".to_string()),
+        Status::Ready => Some("Une nouvelle version est prête : elle s'installera à la fermeture de Lusk Diapo.".to_string()),
+        Status::Managed => Some("Les mises à jour de Lusk Diapo sont gérées par un autre programme sur cet ordinateur.".to_string()),
+        Status::Updated(v) => Some(format!("Lusk Diapo a été mis à jour en version {v}.")),
+        Status::InstallFailed(e) => Some(format!("La dernière mise à jour n'a pas pu être installée : {e}")),
+        _ => None,
+    };
+    if let Some(outcome) = outcome {
+        ui.add_space(8.0);
+        text(ui, &outcome);
+    }
+    if matches!(status, Status::Ready) && ui.button("Redémarrer pour mettre à jour").clicked() {
+        app.updates_rt.updater.restart_to_update();
+    }
+    ui.add_space(20.0);
+    let mut at_start = app.ui.check_updates_at_start;
+    if ui.checkbox(&mut at_start, "Rechercher automatiquement les mises à jour au démarrage").changed() {
+        app.ui.check_updates_at_start = at_start;
+    }
+    ui.add_space(20.0);
+    text(
+        ui,
+        "Les nouvelles versions sont publiées par l'association Lusk. Quand une version plus récente existe, Lusk Diapo \
+         propose de la télécharger et vérifie son empreinte avant de l'installer. L'installation attend que toutes vos \
+         présentations soient enregistrées.",
+    );
+    ui.add_space(8.0);
+    text(ui, "Seul le numéro de la dernière version est demandé : aucune présentation ni aucune donnée personnelle n'est envoyée.");
 }
 
 /// Acts on the result window's answer.

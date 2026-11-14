@@ -548,7 +548,7 @@ pub fn spinner(ui: &mut Ui, id: &str, label: &str, value: f64, step: f64, suffix
             ui.data_mut(|d| d.remove::<String>(key));
         }
         if r.lost_focus() {
-            let num: String = text.chars().filter(|c| c.is_ascii_digit() || *c == '.' || *c == '-').collect();
+            let num: String = text.replace(',', ".").chars().filter(|c| c.is_ascii_digit() || *c == '.' || *c == '-').collect();
             if let Ok(v) = num.parse::<f64>() {
                 out = Some(v);
             }
@@ -577,7 +577,7 @@ pub fn spinner(ui: &mut Ui, id: &str, label: &str, value: f64, step: f64, suffix
 pub fn fmt_num(v: f64, suffix: &str) -> String {
     let s = format!("{v:.2}");
     let s = s.trim_end_matches('0').trim_end_matches('.').to_string();
-    format!("{s}{suffix}")
+    format!("{}{suffix}", deckcraft_engine::geom::decimal(&s))
 }
 
 /// The text a kept-open text box shows: the typed draft while the stored value is still what the

@@ -140,8 +140,8 @@ pub(super) fn commit_props(app: &mut SlideApp, bs: &Backstage) {
 pub fn format_bytes(b: u64) -> String {
     match b {
         0..1024 => format!("{b} bytes"),
-        1024..1_048_576 => format!("{:.1} KB", b as f64 / 1024.0),
-        _ => format!("{:.1} MB", b as f64 / 1_048_576.0),
+        1024..1_048_576 => format!("{} {}", deckcraft_engine::geom::decimal(&format!("{:.1}", b as f64 / 1024.0)), crate::i18n::tr("KB")),
+        _ => format!("{} {}", deckcraft_engine::geom::decimal(&format!("{:.1}", b as f64 / 1_048_576.0)), crate::i18n::tr("MB")),
     }
 }
 

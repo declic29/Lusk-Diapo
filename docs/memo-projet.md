@@ -39,11 +39,19 @@
   `LUSK_LANG=en` remet l'anglais ; les tests restent en anglais. Pour relire :
   `LUSK_FR_SHOTS=<dossier> cargo test -p deckcraft-ui-egui --lib i18n_shots` écrit une image et
   la liste des textes de chaque écran.
+- 14 novembre 2026 (après-midi) : tête de renard pour l'À propos de la barre Fichier et page
+  Fichier › Mises à jour en bas de la barre (comme Lusk Texte et Lusk Tab) ; palette de commandes
+  avec titre, croix, emplacement de chaque commande, sans les commandes réservées aux scripts, et
+  un message dans la barre d'état après chaque commande (ou la raison de l'échec) ; huit
+  conceptions Lusk dans Idées de conception (Aurore, Océan, Agrume, Ardoise, Prairie, Cartes,
+  Minuit, Kraft), proposées même sur une diapositive vide ; correction automatique française
+  (ordinaux 1er, 2e…) ; nouvelles présentations « Présentation1 » avec dispositions et masque en
+  français ; virgule décimale. Balayage du ruban :
+  `LUSK_SWEEP=<fichier> cargo test -p deckcraft-ui-egui --lib ribbon_sweep` clique chaque bouton
+  de chaque onglet et note ceux qui ne font rien ou plantent (262 boutons, aucun plantage).
 
 ## À faire (dans l'ordre du cahier des charges)
 
-3. Français, suite : correction automatique et contenu des nouvelles présentations (masques)
-   en français, séparateur décimal.
 4. Dictionnaires français, breton, anglais et synonymes (de Lusk Texte).
 5. Pages de Fichier (Accueil avec le renard, Ouvrir / Enregistrer sous avec OneDrive et Google
    Drive, Mises à jour, Compte) et onglet Aide.

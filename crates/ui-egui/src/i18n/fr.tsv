@@ -1462,6 +1462,39 @@ Heading sample  {0}	Exemple de titre  {0}
 Body sample  {0}	Exemple de corps  {0}
 Missing alternative text	Texte de remplacement manquant
 Missing slide title	Titre de diapositive manquant
+Updates	Mises à jour
+Type a few letters, then click a command or press Enter to run it.	Tapez quelques lettres, puis cliquez sur une commande ou appuyez sur Entrée pour l'exécuter.
+“{0}” done	« {0} » : fait
+Couldn't run “{0}”: {1}	Impossible d'exécuter « {0} » : {1}
+# ─── Raisons fréquentes d'une commande impossible ───
+no presentation open	aucune présentation ouverte
+no slides	aucune diapositive
+no slide	aucune diapositive
+nothing selected	rien n'est sélectionné
+select text or a shape	sélectionnez du texte ou une forme
+select two or more objects	sélectionnez au moins deux objets
+no text insertion point	aucun point d'insertion dans le texte
+nothing to undo	rien à annuler
+nothing to redo	rien à rétablir
+no such shape	cette forme n'existe pas
+select a shape	sélectionnez une forme
+select a table	sélectionnez un tableau
+select a SmartArt graphic	sélectionnez un graphique SmartArt
+no text box	aucune zone de texte
+the object is locked	l'objet est verrouillé
+nothing to regroup	rien à regrouper
+no comments	aucun commentaire
+no more comments	plus aucun commentaire
+this slide is not part of a photo album	cette diapositive ne fait pas partie d'un album photo
+this object doesn't hold text	cet objet ne contient pas de texte
+nothing changed	aucune modification
+no master	aucun masque
+Lusk designs	Conceptions Lusk
+Layouts for this slide	Dispositions pour cette diapositive
+Presentation title	Titre de la présentation
+Your text here	Votre texte ici
+KB	Ko
+MB	Mo
 # ─── Transitions, animations, options d'effet ───
 Morph	Morphose
 Fade	Fondu

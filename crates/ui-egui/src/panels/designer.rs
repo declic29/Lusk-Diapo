@@ -49,6 +49,15 @@ pub(super) fn designer(app: &mut SlideApp, ui: &mut Ui) {
                 render(format!("layout:{id}"), &d);
             }
         }
+        // Lusk Diapo : les conceptions Lusk, avec un titre d'exemple sur une diapositive vide pour
+        // que l'aperçu montre quelque chose.
+        for (id, _) in deckcraft_engine::cmd::ideas::LOOKS {
+            let mut d = (*doc).clone();
+            if deckcraft_engine::cmd::ideas::apply_idea(&mut d, &sel, idx, id).is_ok() {
+                sample_text(&mut d, idx);
+                render(format!("look:{id}"), &d);
+            }
+        }
         for th in &themes {
             let mut d = (*doc).clone();
             if let Some(m) = d.masters.first_mut() {
@@ -75,6 +84,16 @@ pub(super) fn designer(app: &mut SlideApp, ui: &mut Ui) {
         ui.add_space(8.0);
         clicked
     };
+    ui.label(egui::RichText::new(crate::i18n::tr("Lusk designs")).color(t.text_dim));
+    ui.add_space(4.0);
+    for (id, label) in deckcraft_engine::cmd::ideas::LOOKS {
+        if thumb(ui, &format!("look:{id}"), label) {
+            run(app, "design.applyIdea", json!({"id": id}));
+        }
+    }
+    ui.add_space(4.0);
+    ui.label(egui::RichText::new(crate::i18n::tr("Layouts for this slide")).color(t.text_dim));
+    ui.add_space(4.0);
     if ideas.is_empty() {
         ui.label(egui::RichText::new(crate::i18n::tr("Add a title with a picture or some text to get layout ideas.")).color(t.text_dim));
     }
@@ -89,6 +108,29 @@ pub(super) fn designer(app: &mut SlideApp, ui: &mut Ui) {
     for th in &themes {
         if thumb(ui, &format!("theme:{}", th.name), &th.name) {
             run(app, "design.theme", json!({"name": th.name}));
+        }
+    }
+}
+
+/// For the previews only: an empty title and subtitle get sample text, so a blank slide still
+/// shows how a design looks.
+fn sample_text(d: &mut deckcraft_model::Presentation, idx: usize) {
+    let Some(slide) = d.slides.get_mut(idx) else { return };
+    let slide = std::sync::Arc::make_mut(slide);
+    for s in &mut slide.shapes {
+        let Some(ph) = &s.ph else { continue };
+        let sample = if ph.kind.is_title() {
+            crate::i18n::tr("Presentation title")
+        } else if matches!(ph.kind, deckcraft_model::PhType::SubTitle | deckcraft_model::PhType::Body | deckcraft_model::PhType::Obj) {
+            crate::i18n::tr("Your text here")
+        } else {
+            continue;
+        };
+        let body = s.text.get_or_insert_with(Default::default);
+        if body.is_empty() {
+            let style = body.list_style.clone();
+            *body = deckcraft_model::TextBody::from_text(sample);
+            body.list_style = style;
         }
     }
 }
