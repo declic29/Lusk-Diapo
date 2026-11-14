@@ -2,7 +2,7 @@
 //! bar until Esc or the back arrow returns to the presentation. With nothing open it is the start
 //! screen: PowerPoint's start screen and File › Home are the same page.
 //!
-//! A side menu on the left picks a page (Home, New, Open, Info, Save As, Print, Export, About);
+//! A side menu on the left picks a page (Home, New, Open, Save As, Print, Export, About);
 //! Save, Close and Options act at once. Every action runs an existing command through
 //! [`SlideApp::run`] or one of the app's file helpers ([`SlideApp::export_as`],
 //! [`SlideApp::print_pdf`], [`SlideApp::save_as_dialog`]); the state here is UI-only and never
@@ -24,8 +24,8 @@ mod print;
 
 pub use files::split_path;
 use files::{home, new_page, open_page};
-use info::{PROPERTIES, about, commit_props, info, save_as};
 pub use info::{SAVE_TYPES, format_bytes};
+use info::{about, save_as};
 use print::{export, print};
 pub use print::{print_page_size, print_params, print_slides};
 
@@ -43,7 +43,6 @@ pub enum Page {
     Home,
     New,
     Open,
-    Info,
     SaveAs,
     Print,
     Export,
@@ -53,7 +52,7 @@ pub enum Page {
 }
 
 impl Page {
-    pub const ALL: [Page; 9] = [Page::Home, Page::New, Page::Open, Page::Info, Page::SaveAs, Page::Print, Page::Export, Page::About, Page::Updates];
+    pub const ALL: [Page; 8] = [Page::Home, Page::New, Page::Open, Page::SaveAs, Page::Print, Page::Export, Page::About, Page::Updates];
 
     /// The id `app.backstage {page}` takes.
     pub fn id(self) -> &'static str {
@@ -61,7 +60,6 @@ impl Page {
             Page::Home => "home",
             Page::New => "new",
             Page::Open => "open",
-            Page::Info => "info",
             Page::SaveAs => "saveAs",
             Page::Print => "print",
             Page::Export => "export",
@@ -85,7 +83,6 @@ impl Page {
             Page::Home => "Home",
             Page::New => "New",
             Page::Open => "Open",
-            Page::Info => "Info",
             Page::SaveAs => "Save As",
             Page::Print => "Print",
             Page::Export => "Export",
@@ -99,7 +96,6 @@ impl Page {
             Page::Home => Icon::Home,
             Page::New => Icon::NewFile,
             Page::Open => Icon::OpenFolder,
-            Page::Info => Icon::Info,
             Page::SaveAs => Icon::SaveAs,
             Page::Print => Icon::Print,
             Page::Export => Icon::Export,
@@ -110,7 +106,7 @@ impl Page {
 
     /// Pages about the open presentation (hidden on the start screen).
     pub fn needs_doc(self) -> bool {
-        matches!(self, Page::Info | Page::SaveAs | Page::Print | Page::Export)
+        matches!(self, Page::SaveAs | Page::Print | Page::Export)
     }
 }
 
@@ -147,7 +143,7 @@ impl Nav {
 pub fn entries(has_doc: bool) -> (Vec<Nav>, Vec<Nav>) {
     let mut top = vec![Nav::Page(Page::Home), Nav::Page(Page::New), Nav::Page(Page::Open)];
     if has_doc {
-        top.extend([Nav::Page(Page::Info), Nav::Save, Nav::Page(Page::SaveAs), Nav::Page(Page::Print), Nav::Page(Page::Export), Nav::Close]);
+        top.extend([Nav::Save, Nav::Page(Page::SaveAs), Nav::Page(Page::Print), Nav::Page(Page::Export), Nav::Close]);
     }
     (top, vec![Nav::Page(Page::About), Nav::Options, Nav::Page(Page::Updates)])
 }
@@ -178,8 +174,6 @@ pub struct Backstage {
     pub focus: Option<usize>,
     /// Search text on Home, New and Open.
     pub query: String,
-    /// Info: property drafts while a field is being edited.
-    props: Vec<String>,
     pub print_scope: PrintScope,
     pub print_range: String,
     /// `slides`, `notes`, or `h1`…`h9` (handouts with that many slides a page).
@@ -208,7 +202,6 @@ impl Backstage {
             docs,
             focus: None,
             query: String::new(),
-            props: vec![String::new(); PROPERTIES.len()],
             print_scope: PrintScope::All,
             print_range: String::new(),
             print_layout: "slides",
@@ -363,7 +356,6 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
             }
             if nav_item(ui, *nav, &bs, index, &t).clicked() {
                 bs.focus = None;
-                commit_props(app, &bs);
                 match act(app, *nav, bs.page) {
                     None => out.close = true,
                     Some(p) => out.page = Some(p),
@@ -378,7 +370,6 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
             for (k, nav) in bottom.iter().enumerate().rev() {
                 if nav_item(ui, *nav, &bs, first_bottom + k, &t).clicked() {
                     bs.focus = None;
-                    commit_props(app, &bs);
                     match act(app, *nav, bs.page) {
                         None => out.close = true,
                         Some(p) => out.page = Some(p),
@@ -418,7 +409,6 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
                     Page::Home => home(app, ui, &mut bs, &mut out),
                     Page::New => new_page(app, ui, &mut bs),
                     Page::Open => open_page(app, ui, &mut bs),
-                    Page::Info => info(app, ui, &mut bs),
                     Page::SaveAs => save_as(app, ui, &mut bs, &mut out),
                     Page::Print => print(app, ui, &mut bs),
                     Page::Export => export(app, ui, &mut bs),

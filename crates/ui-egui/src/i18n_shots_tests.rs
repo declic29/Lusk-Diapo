@@ -94,7 +94,7 @@ fn i18n_shots() {
     if want("palette") {
         shoot(&dir, "palette", |app| app.palette = Some(("police".into(), 0)));
     }
-    for page in ["home", "new", "open", "info", "saveAs", "print", "export", "about", "updates"] {
+    for page in ["home", "new", "open", "saveAs", "print", "export", "about", "updates"] {
         let name = format!("fichier-{page}");
         if want(&name) {
             shoot(&dir, &name, |app| {

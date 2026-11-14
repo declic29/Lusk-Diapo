@@ -194,24 +194,6 @@ pub(super) fn place_row(ui: &mut Ui, icon: Icon, label: &str, selected: bool, wi
     resp
 }
 
-/// A square button with its title and description beside it (Info, Export).
-pub(super) fn task(ui: &mut Ui, icon: Icon, button: &str, title: &str, detail: &str, enabled: bool) -> bool {
-    let (button, title, detail) = (crate::i18n::tr(button), crate::i18n::tr(title), crate::i18n::tr(detail));
-    let t = Tokens::get(ui.ctx());
-    let mut clicked = false;
-    ui.horizontal_top(|ui| {
-        clicked = square_button(ui, icon, button, enabled).clicked();
-        ui.add_space(12.0);
-        ui.vertical(|ui| {
-            ui.add_space(4.0);
-            ui.label(RichText::new(crate::i18n::trs(title)).font(theme::font(15.0)).color(t.text));
-            dim(ui, detail);
-        });
-    });
-    ui.add_space(14.0);
-    clicked
-}
-
 // ---------------------------------------------------------------- pages
 
 /// Home: Lusk Diapo's mark, new presentations (the first themes, with a link to New) and recent

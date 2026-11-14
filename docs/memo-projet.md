@@ -55,6 +55,9 @@
   Drive comme Lusk Texte et Lusk Tab (`cloud.rs` repris de Lusk Tab) : la boîte d'enregistrement
   s'ouvre dans le dossier du service ; une tuile grisée avec une aide quand le service n'est pas
   installé.
+- 14 novembre 2026 (soir, suite) : plus de page Fichier › Informations (Inspecter la
+  présentation, Gérer la présentation, propriétés) : le menu Fichier va d'Ouvrir à Enregistrer.
+  Le Vérificateur d'accessibilité reste dans l'onglet Révision.
 
 ## À faire (dans l'ordre du cahier des charges)
 

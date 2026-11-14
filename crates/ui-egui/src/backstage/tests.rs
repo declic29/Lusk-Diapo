@@ -92,7 +92,8 @@ fn page_ids_round_trip_and_unknown_ids_are_refused() {
     let (top, bottom) = entries(false);
     assert_eq!(top, vec![Nav::Page(Page::Home), Nav::Page(Page::New), Nav::Page(Page::Open)], "the start screen has no presentation pages");
     assert_eq!(bottom, vec![Nav::Page(Page::About), Nav::Options, Nav::Page(Page::Updates)], "Lusk Diapo: Updates at the very bottom");
-    assert_eq!(entries(true).0.len(), 9);
+    assert_eq!(entries(true).0.len(), 8, "no Info page");
+    assert_eq!(Page::parse("info"), None);
     assert_eq!(split_path("/home/me/Talk.pptx"), ("Talk.pptx".into(), "/home/me".into()));
     assert_eq!(format_bytes(512), "512 bytes");
     assert_eq!(format_bytes(33_485), "32.7 KB");
@@ -131,15 +132,15 @@ fn alt_f_arrows_enter_and_esc_drive_the_side_menu() {
     h.run_steps(3);
     assert_eq!(page(&h), Some(Page::Home));
     assert_eq!(h.state().backstage.as_ref().and_then(|b| b.focus), Some(0));
-    for want in [Page::New, Page::Open, Page::Info] {
+    for want in [Page::New, Page::Open] {
         h.key_press(Key::ArrowDown);
         h.run_steps(2);
         assert_eq!(page(&h), Some(want));
     }
-    // Save has the focus now; the page stays Info until it is run.
+    // Save has the focus now; the page stays Open until it is run.
     h.key_press(Key::ArrowDown);
     h.run_steps(2);
-    assert_eq!(page(&h), Some(Page::Info));
+    assert_eq!(page(&h), Some(Page::Open));
     // A presentation that was never saved goes to Save As, as in PowerPoint.
     h.key_press(Key::Enter);
     h.run_steps(2);
@@ -160,11 +161,10 @@ fn alt_f_arrows_enter_and_esc_drive_the_side_menu() {
 fn every_page_renders() {
     let mut h = harness(new_app());
     let last_theme = deckcraft_model::theme::builtin_themes().last().map(|t| t.name.clone()).unwrap();
-    let checks: [(Page, &str); 8] = [
+    let checks: [(Page, &str); 7] = [
         (Page::Home, "Recent"),
         (Page::New, &last_theme),
         (Page::Open, "Browse"),
-        (Page::Info, "Hidden slides"),
         (Page::SaveAs, "Not saved yet"),
         (Page::Print, "Print Hidden Slides"),
         (Page::Export, "Create PDF Document"),
@@ -179,6 +179,9 @@ fn every_page_renders() {
         assert!(selected, "{} is in the side menu", p.label());
     }
     assert!(h.state_mut().run("app.backstage", json!({"page": "share"})).is_err(), "Share (cloud) isn't offered");
+    assert!(h.state_mut().run("app.backstage", json!({"page": "info"})).is_err(), "Lusk Diapo has no Info page");
+    assert!(h.query_all_by_label("Inspect Presentation").next().is_none());
+    assert!(h.query_all_by_label("Manage Presentation").next().is_none());
 }
 
 /// In a window narrower than the page's maximum width the New tiles stay inside the right margin (#1421).
@@ -449,69 +452,6 @@ fn host_save_as_under_the_same_name_returns_to_the_slide() {
     h.run_steps(3);
     assert_eq!(*got.borrow(), [("deck.pptx".to_string(), true)]);
     assert!(h.state().backstage.is_none(), "the save returns to the slide");
-}
-
-/// Info shows the presentation's counts and properties, and edits them through file.properties.
-#[test]
-fn info_shows_and_edits_the_properties() {
-    let mut app = new_app();
-    app.run("file.properties", json!({"title": "Quarterly", "keywords": "sales"})).unwrap();
-    app.run("slide.new", json!({})).unwrap();
-    app.run("slide.hide", json!({})).unwrap();
-    let mut h = harness(app);
-    h.state_mut().run("app.backstage", json!({"page": "info"})).unwrap();
-    h.run_steps(3);
-    assert_eq!(h.get_by_role_and_label(Role::TextInput, "Title").value().as_deref(), Some("Quarterly"));
-    assert_eq!(h.get_by_role_and_label(Role::TextInput, "Tags").value().as_deref(), Some("sales"));
-    assert!(h.query_all_by_label("Not saved yet").next().is_some());
-    let author = h.get_by_role_and_label(Role::TextInput, "Author");
-    author.click();
-    h.run_steps(2);
-    h.get_by_role_and_label(Role::TextInput, "Author").type_text("Ada");
-    h.run_steps(2);
-    h.key_press(Key::Enter);
-    h.run_steps(3);
-    assert_eq!(h.state().session.active().unwrap().doc.props.author, "Ada");
-    // Esc in a field leaves the field; the next one goes back.
-    assert!(h.state().backstage_open());
-}
-
-/// Leaving a property field with a click on another field keeps what was typed.
-#[test]
-fn info_keeps_a_property_draft_when_another_field_is_clicked() {
-    let mut h = harness(new_app());
-    h.state_mut().run("app.backstage", json!({"page": "info"})).unwrap();
-    h.run_steps(3);
-    h.get_by_role_and_label(Role::TextInput, "Author").click();
-    h.run_steps(2);
-    h.get_by_role_and_label(Role::TextInput, "Author").type_text("Ada");
-    h.run_steps(2);
-    h.get_by_role_and_label(Role::TextInput, "Title").click();
-    h.run_steps(4);
-    assert_eq!(h.state().session.active().unwrap().doc.props.author, "Ada");
-}
-
-/// Save straight from a property field saves what was typed (the side menu acts before the field
-/// is drawn again).
-#[test]
-fn info_saves_a_property_draft_when_save_is_clicked() {
-    let dir = temp_dir("info-save");
-    let path = dir.join("Draft.pptx").to_string_lossy().to_string();
-    let mut s = Session::with_new();
-    s.execute("file.saveAs", &json!({"path": path})).unwrap();
-    let mut h = harness(SlideApp::new(s, Services::default()));
-    h.state_mut().run("app.backstage", json!({"page": "info"})).unwrap();
-    h.run_steps(3);
-    h.get_by_role_and_label(Role::TextInput, "Author").click();
-    h.run_steps(2);
-    h.get_by_role_and_label(Role::TextInput, "Author").type_text("Ada");
-    h.run_steps(2);
-    click_nav(&h, "Save");
-    h.run_steps(3);
-    let doc = h.state().session.active().unwrap();
-    assert_eq!(doc.doc.props.author, "Ada");
-    assert!(!doc.is_dirty(), "the author went into the saved file");
-    let _ = std::fs::remove_dir_all(&dir);
 }
 
 /// With nothing open the File tab is the start screen: Home, New and Open, no back arrow, and Esc
