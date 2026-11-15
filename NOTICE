@@ -32,6 +32,10 @@ list (author, source, license) is in ATTRIBUTION.md.
   LICENSE at that commit. Among the paths embedded here, the Feather-derived names are arrow-down,
   arrow-left, arrow-right, arrow-up, at-sign, calendar, check, chevron-right, clipboard, clock,
   compass, download, info, key, link, lock, minus, moon, move, music, plus, search, target and x.
+- Windows installer welcome page (packaging/windows/lusk-welcome.wxs) — taken from Lusk Texte and
+  Lusk Tab, adapted from WelcomeEulaDlg.wxs of the WiX Toolset 5.0.2, Copyright (c) .NET Foundation
+  and contributors, Microsoft Reciprocal License (packaging/windows/LICENSE-WiX-MS-RL.txt). The
+  installer itself is built with the WiX Toolset (https://wixtoolset.org), whose dialogs it uses.
 
   ISC License
 

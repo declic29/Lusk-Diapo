@@ -42,12 +42,18 @@ Téléchargez la dernière version pour votre système :
 | Linux (toutes distributions) | [**Lusk-Diapo-Linux.AppImage**](https://github.com/declic29/Lusk-Diapo/releases/latest/download/Lusk-Diapo-Linux.AppImage) |
 | Linux (Debian, Ubuntu, Mint) | [**Lusk-Diapo-Linux.deb**](https://github.com/declic29/Lusk-Diapo/releases/latest/download/Lusk-Diapo-Linux.deb) |
 
-Les autres formats et les versions précédentes sont sur la page
+Les autres formats (version portable pour Windows sans installation, `.rpm` pour Fedora et
+openSUSE, `.tar.gz`) et les versions précédentes sont sur la page
 [Releases](https://github.com/declic29/Lusk-Diapo/releases). `SHA256SUMS.txt` donne l'empreinte de
 chaque fichier, pour vérifier un téléchargement.
 
 Une fois Lusk Diapo installé, **Fichier › Mises à jour** cherche et installe les nouvelles
 versions.
+
+**Windows.** L'installeur, en français, propose « Pour moi seulement » (pour votre compte, sans
+droits d'administrateur, dans `%LOCALAPPDATA%\Programs\Lusk\Lusk Diapo`) ou « Pour tous les
+utilisateurs de cet ordinateur » (dans `C:\Program Files\Lusk\Lusk Diapo`, avec l'accord d'un
+administrateur), puis un raccourci sur le Bureau (case cochée au départ).
 
 **macOS.** Ouvrez le `.dmg` et glissez Lusk Diapo dans Applications. La première fois, faites un
 clic droit sur l'application puis **Ouvrir**.

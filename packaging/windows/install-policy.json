@@ -1,26 +1,61 @@
 {
   "id": "deckcraft",
-  "name": "DeckCraft",
-  "upgradeCode": "6F9C69E7-7825-40D2-BF26-C274DA676425",
+  "name": "LuskDiapo",
+  "folder": "Lusk Diapo",
+  "suite": "Lusk",
+  "upgradeCode": "83DB4EEC-1D6E-42BB-AC8B-7C904D735F06",
   "sources": [
-    "deckcraft.wxs"
+    "deckcraft.wxs",
+    "lusk-welcome.wxs"
   ],
   "icon": "assets/app-icon/deckcraft.ico",
-  "localization": [],
+  "localization": [
+    "lusk-fr.wxl"
+  ],
   "extensions": [
-    "UI"
+    "UI",
+    "Util"
   ],
   "payloads": [
-    "NOTICE",
     "deckcraft-cli.exe",
     "deckcraft.exe"
   ],
   "registry": [
     [
       "-1",
+      "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\deckcraft.exe",
+      "",
+      "[#DeckcraftExe]"
+    ],
+    [
+      "-1",
+      "Software\\RegisteredApplications",
+      "LuskDiapo",
+      "Software\\LuskDiapo\\Capabilities"
+    ],
+    [
+      "-1",
+      "Software\\LuskDiapo\\Capabilities",
+      "ApplicationName",
+      "Lusk Diapo"
+    ],
+    [
+      "-1",
+      "Software\\LuskDiapo\\Capabilities",
+      "ApplicationDescription",
+      "Le logiciel de présentation libre de l'association Lusk ; ouvrez et enregistrez des présentations PowerPoint."
+    ],
+    [
+      "-1",
+      "Software\\LuskDiapo\\Capabilities",
+      "ApplicationIcon",
+      "\"[#DeckcraftExe]\",0"
+    ],
+    [
+      "-1",
       "Software\\Classes\\Applications\\deckcraft.exe",
       "FriendlyAppName",
-      "DeckCraft"
+      "Lusk Diapo"
     ],
     [
       "-1",
@@ -36,8 +71,44 @@
     ],
     [
       "-1",
+      "Software\\LuskDiapo\\Capabilities\\FileAssociations",
+      ".deckcraft",
+      "LuskDiapo.Document"
+    ],
+    [
+      "-1",
+      "Software\\Classes\\LuskDiapo.Presentation\\shell\\open\\command",
+      "",
+      "\"[#DeckcraftExe]\" \"%1\""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\.pptx\\OpenWithProgids",
+      "LuskDiapo.Presentation",
+      ""
+    ],
+    [
+      "-1",
       "Software\\Classes\\Applications\\deckcraft.exe\\SupportedTypes",
       ".pptx",
+      ""
+    ],
+    [
+      "-1",
+      "Software\\LuskDiapo\\Capabilities\\FileAssociations",
+      ".pptx",
+      "LuskDiapo.Presentation"
+    ],
+    [
+      "-1",
+      "Software\\Classes\\LuskDiapo.Template\\shell\\open\\command",
+      "",
+      "\"[#DeckcraftExe]\" \"%1\""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\.potx\\OpenWithProgids",
+      "LuskDiapo.Template",
       ""
     ],
     [
@@ -48,33 +119,45 @@
     ],
     [
       "-1",
+      "Software\\LuskDiapo\\Capabilities\\FileAssociations",
+      ".potx",
+      "LuskDiapo.Template"
+    ],
+    [
+      "-1",
+      "Software\\Classes\\LuskDiapo.SlideShow\\shell\\open\\command",
+      "",
+      "\"[#DeckcraftExe]\" \"%1\""
+    ],
+    [
+      "-1",
+      "Software\\Classes\\.ppsx\\OpenWithProgids",
+      "LuskDiapo.SlideShow",
+      ""
+    ],
+    [
+      "-1",
       "Software\\Classes\\Applications\\deckcraft.exe\\SupportedTypes",
       ".ppsx",
       ""
     ],
     [
       "-1",
-      "Software\\Classes\\.pptx\\OpenWithProgids",
-      "DeckCraft.Presentation",
-      ""
+      "Software\\LuskDiapo\\Capabilities\\FileAssociations",
+      ".ppsx",
+      "LuskDiapo.SlideShow"
     ],
     [
       "-1",
-      "Software\\Classes\\.potx\\OpenWithProgids",
-      "DeckCraft.Presentation",
-      ""
+      "Software\\LuskDiapo",
+      "DesktopShortcut",
+      "#1"
     ],
     [
       "-1",
-      "Software\\Classes\\.ppsx\\OpenWithProgids",
-      "DeckCraft.Presentation",
-      ""
-    ],
-    [
-      "-1",
-      "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\deckcraft.exe",
-      "",
-      "[#DeckcraftExe]"
+      "Software\\Learning Machines LLC\\Lusk Diapo",
+      "InstallDir",
+      "[INSTALLFOLDER]"
     ]
   ],
   "mode": "dualScope"

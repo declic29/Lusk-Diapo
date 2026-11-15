@@ -64,10 +64,36 @@
   messages d'erreur…) : ils passent maintenant par `tr` / `trf`, avec 88 nouvelles lignes dans
   `fr.tsv`. Reste en anglais : « Close window », le nom pour lecteur d'écran de la croix des
   fenêtres, qui vient de la bibliothèque craft-ui.
+- 15 novembre 2026, **installateurs en français et workflow « Publication »** (repris de Lusk
+  Tab, lui-même repris de Lusk Texte) :
+  - `.github/workflows/release.yml` : une étiquette `vX.Y.Z` (égale à la version du Cargo.toml)
+    fabrique les installateurs Windows, macOS et Linux et prépare une Release en brouillon, avec
+    SHA256SUMS.txt, les copies aux noms stables (`Lusk-Diapo-Windows.msi`, `-Mac.dmg`,
+    `-Linux.AppImage`, `-Linux.deb`) des liens du README et les copies au nom technique
+    (`deckcraft-<version>-…`) pour la mise à jour. Plus de dépendance au workflow partagé de
+    storytold (ni essai chaque nuit) ; `windows-arm64.yml` retiré ;
+  - fichiers publiés `Lusk-Diapo-<version>-<système>-<architecture>.<ext>`, reconnus par la mise à
+    jour (test `release_files_named_lusk_diapo_are_found`) ;
+  - Windows : `packaging/windows/deckcraft.wxs` réécrit sur le modèle de Lusk Tab (installateur en
+    français, page d'accueil Lusk `lusk-welcome.wxs`, textes `lusk-fr.wxl`, images à l'icône et au
+    renard `images/`, « Pour moi seulement » / « Pour tous les utilisateurs », dossier
+    `Programs\Lusk\Lusk Diapo`, raccourci du Bureau coché, « Lancer Lusk Diapo » à la fin, .pptx
+    .potx .ppsx dans « Ouvrir avec » sans prendre la place de PowerPoint, .deckcraft ouvert par
+    Lusk Diapo). Les raccourcis gardent l'icône de `deckcraft.exe` (#1114). Clé
+    `Software\Learning Machines LLC\Lusk Diapo` pour que la mise à jour reconnaisse l'installation.
+    Nouvel UpgradeCode `83DB4EEC-1D6E-42BB-AC8B-7C904D735F06` (ne pas le changer) ;
+  - macOS : `Lusk Diapo.app` dans `Lusk-Diapo-<version>-macos-universal.dmg`, fond de fenêtre
+    Lusk Diapo (`packaging/macos/dmg/background.py`), vérification stricte de la signature dans le
+    DMG (#525) ;
+  - Linux : AppImage, .deb et .rpm (paquet `lusk-diapo`), .tar.gz ; l'AppImage se met à jour depuis
+    `declic29/Lusk-Diapo`.
+  - Reste : la capture d'écran de `bzh.lusk.diapo.metainfo.xml.in` est encore celle de DeckCraft ;
+    Flatpak et FreeBSD, hors publication, gardent les noms de DeckCraft.
 
 ## À faire (dans l'ordre du cahier des charges)
 
 4. Dictionnaires français, breton, anglais et synonymes (de Lusk Texte).
 5. Pages de Fichier (Accueil avec le renard, Ouvrir avec OneDrive et Google Drive, Compte) et onglet Aide.
 6. Relevé réseau et page Confidentialité.
-7. Installateurs Windows, macOS, Linux et workflow « Publication » ; version 1.0.0.
+7. Version 1.0.0 : passer `version` à 1.0.0 dans le Cargo.toml, pousser l'étiquette `v1.0.0`,
+   tester les installateurs du brouillon sur Windows, Mac et Linux, puis publier la Release.

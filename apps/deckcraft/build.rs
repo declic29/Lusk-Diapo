@@ -15,9 +15,9 @@ fn main() {
     let mut res = winresource::WindowsResource::new();
     res.set_icon("../../assets/app-icon/deckcraft.ico")
         .set("ProductName", "Lusk Diapo")
-        .set("FileDescription", "Lusk Diapo presentations")
-        .set("CompanyName", "Learning Machines LLC")
-        .set("LegalCopyright", "Copyright (c) the Lusk Diapo authors. MIT OR Apache-2.0.")
+        .set("FileDescription", "Lusk Diapo, présentations et diaporamas")
+        .set("CompanyName", "Lusk")
+        .set("LegalCopyright", "© 2026 Lusk, association loi 1901. Logiciel libre sous licence MIT OR Apache-2.0.")
         .set("OriginalFilename", "deckcraft.exe")
         .set("InternalName", "deckcraft");
     if let Err(e) = res.compile() {

@@ -1,18 +1,23 @@
 <#
 .SYNOPSIS
-  Build, sign and package DeckCraft for Windows.
+  Build, sign and package Lusk Diapo for Windows.
 
 .DESCRIPTION
   Produces, in $env:DIST (default: dist/release):
-    deckcraft-<version>-windows-<arch>.msi            per-machine installer (WiX v5)
-    deckcraft-<version>-windows-<arch>-portable.zip   deckcraft.exe + deckcraft-cli.exe
+    Lusk-Diapo-<version>-windows-<arch>.msi           installer (WiX v5), one dual-scope package: for the
+                                                      current user by default, no admin rights (#39);
+                                                      "Everyone on this computer" installs per machine
+    Lusk-Diapo-<version>-windows-<arch>-portable.zip  deckcraft.exe + deckcraft-cli.exe
 
   The binaries link the C runtime statically (+crt-static), so neither the MSI nor the portable
   zip needs the Visual C++ redistributable. Signing is delegated to sign.ps1 (skipped with a
   warning when no signing secrets are set).
 
   Needs: Rust (MSVC toolchain + the target), the Windows SDK (rc.exe, signtool.exe),
-  and WiX v5: dotnet tool install --global wix --version 5.0.2
+  and WiX v5 with its UI and Util extensions (installer dialogs, "Lancer Lusk Diapo" on finish):
+    dotnet tool install --global wix --version 5.0.2
+    wix extension add -g WixToolset.UI.wixext/5.0.2
+    wix extension add -g WixToolset.Util.wixext/5.0.2
 
 .EXAMPLE
   pwsh packaging/windows/package.ps1 -Arch x64
@@ -53,7 +58,7 @@ New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 if (-not $env:DECKCRAFT_BUILD_SHA) { $env:DECKCRAFT_BUILD_SHA = (git -C $Root rev-parse HEAD 2>$null) }
 if (-not $env:DECKCRAFT_BUILD_DATE) { $env:DECKCRAFT_BUILD_DATE = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd') }
 
-Write-Output "DeckCraft $Version for Windows $Arch ($Target)"
+Write-Output "Lusk Diapo $Version for Windows $Arch ($Target)"
 
 if (-not $SkipBuild) {
   # Static CRT: no VC++ redistributable needed. Scoped to the target so host build scripts and
@@ -83,8 +88,7 @@ foreach ($check in @(@('deckcraft.exe', 2), @('deckcraft-cli.exe', 3))) {
   if ($h.Subsystem -ne $check[1]) { throw "$($check[0]) has PE subsystem $($h.Subsystem), expected $($check[1])" }
   Write-Output "ok $($check[0]): $Arch, PE subsystem $($h.Subsystem)"
 }
-
-# The Start menu shortcut is not advertised and names no MSI icon, so it shows the icon embedded in
+# The Start menu and desktop shortcuts name no MSI icon, so they show the icon embedded in
 # deckcraft.exe (#1114). -SkipBuild takes whatever binary is already there, which may come from a
 # build without DECKCRAFT_REQUIRE_WINRES=1 whose resource compilation failed: refuse an exe with no
 # icon instead of shipping shortcuts with a generic one. ExtractIconEx with index -1 counts them.
@@ -95,11 +99,14 @@ Write-Output "ok deckcraft.exe: $Icons embedded icon group(s)"
 $Stage = Join-Path $TargetDir "windows-package\$Arch"
 Remove-Item -Recurse -Force $Stage -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $Stage | Out-Null
-# Dependency font notices are required even without optional craft-fonts.
-Copy-Item -LiteralPath (Join-Path $Root 'NOTICE') -Destination $Stage
 Copy-Item (Join-Path $Bin 'deckcraft.exe'), (Join-Path $Bin 'deckcraft-cli.exe') $Stage
 
 & (Join-Path $PSScriptRoot 'sign.ps1') (Join-Path $Stage 'deckcraft.exe') (Join-Path $Stage 'deckcraft-cli.exe')
+
+# Required notices ship in every MSI, independently of optional craft-fonts.
+$AppNotices = Join-Path $Stage 'app-notices'
+New-Item -ItemType Directory -Force -Path $AppNotices | Out-Null
+Copy-Item -LiteralPath (Join-Path $Root 'NOTICE'), (Join-Path $Root 'ATTRIBUTION.md') -Destination $AppNotices
 
 # ---- font notices for the MSI ------------------------------------------------------------------
 # The portable ZIP already carries these notices; stage the complete files before MSI creation too.
@@ -115,26 +122,62 @@ if ($env:CRAFT_FONTS_DIR) {
 # ---- end font notices for the MSI --------------------------------------------------------------
 
 # ---- MSI ---------------------------------------------------------------------------------------
-$Msi = Join-Path $Dist "deckcraft-$Version-windows-$Arch.msi"
-Invoke-Native 'WiX UI extension' { wix extension add -g WixToolset.UI.wixext/5.0.2 }
-Invoke-Native 'wix build' {
-  wix build (Join-Path $PSScriptRoot 'deckcraft.wxs') -arch $Arch -ext WixToolset.UI.wixext `
+# The installer's welcome page shows the license: build its RTF from LICENSE-MIT and LICENSE-APACHE
+# so it never drifts from them. Hard-wrapped lines are rejoined into paragraphs so the text wraps
+# to the dialog's width.
+function ConvertTo-RtfText([string] $Text) {
+  $sb = [System.Text.StringBuilder]::new()
+  foreach ($ch in $Text.ToCharArray()) {
+    $c = [int] $ch
+    if ($c -eq 0x5C -or $c -eq 0x7B -or $c -eq 0x7D) { [void] $sb.Append('\').Append($ch) }
+    elseif ($c -gt 127) { [void] $sb.Append("\u$(if ($c -gt 32767) { $c - 65536 } else { $c })?") }
+    else { [void] $sb.Append($ch) }
+  }
+  return $sb.ToString()
+}
+$paragraphs = [System.Collections.Generic.List[string]]::new()
+$paragraphs.Add('\b Lusk Diapo\b0')
+$paragraphs.Add((ConvertTo-RtfText "Lusk Diapo, publi$([char]0xE9) par l'association Lusk, est un logiciel de pr$([char]0xE9)sentation libre et gratuit, sous la licence MIT ou la licence Apache, version 2.0, au choix. Vous pouvez l'utiliser, le copier et le partager librement. Le texte officiel des deux licences, en anglais, suit. Les polices et les autres $([char]0xE9)l$([char]0xE9)ments fournis avec Lusk Diapo gardent leurs propres licences libres, list$([char]0xE9)es dans NOTICE et ATTRIBUTION.md sur https://github.com/declic29/Lusk-Diapo."))
+foreach ($file in 'LICENSE-MIT', 'LICENSE-APACHE') {
+  $title = $true  # each file opens with its license's name: show it bold
+  foreach ($para in ((Get-Content -Raw (Join-Path $Root $file)) -split '\r?\n\s*\r?\n')) {
+    $joined = (($para -split '\r?\n') | ForEach-Object { $_.Trim() } | Where-Object { $_ }) -join ' '
+    if (-not $joined) { continue }
+    $paragraphs.Add($(if ($title) { "\b $(ConvertTo-RtfText $joined)\b0" } else { ConvertTo-RtfText $joined }))
+    $title = $false
+  }
+}
+$LicenseRtf = Join-Path $Stage 'license.rtf'
+$rtf = '{\rtf1\ansi\ansicpg1252\deff0{\fonttbl{\f0\fswiss\fcharset0 Tahoma;}}\viewkind4\uc1\pard\sa120\f0\fs16 ' +
+  ($paragraphs -join "\par`r`n") + "\par`r`n}`r`n"
+[System.IO.File]::WriteAllText($LicenseRtf, $rtf, [System.Text.Encoding]::ASCII)
+
+# One MSI from one dual-scope source (see deckcraft.wxs and install-policy.wxi): per user by default into
+# %LOCALAPPDATA%\Programs\Lusk\Lusk Diapo (#39), per machine into Program Files\Lusk on request.
+$Msi = Join-Path $Dist "Lusk-Diapo-$Version-windows-$Arch.msi"
+Invoke-Native "wix build" {
+  wix build (Join-Path $PSScriptRoot 'deckcraft.wxs') (Join-Path $PSScriptRoot 'lusk-welcome.wxs') -arch $Arch `
+    -ext WixToolset.UI.wixext -ext WixToolset.Util.wixext `
+    -culture fr-FR -loc (Join-Path $PSScriptRoot 'lusk-fr.wxl') `
     -d "Version=$MsiVersion" -d "BinDir=$Stage" -d "IconPath=$(Join-Path $Root 'assets\app-icon\deckcraft.ico')" `
-    -d "DocsDir=$Docs" -d "HasCraftFontLicences=$HasCraftFontLicences" `
+    -d "LicenseRtf=$LicenseRtf" `
+    -d "AppNoticesDir=$AppNotices" -d "DocsDir=$Docs" -d "HasCraftFontLicences=$HasCraftFontLicences" -d "Scope=perUserOrMachine" `
     -o $Msi
 }
 # Check the compiled scope, path and registration contract before signing.
-& (Join-Path $PSScriptRoot 'check-install-policy.ps1') -MsiPath $Msi
+$shell = (Get-Process -Id $PID).Path
+& $shell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'check-install-policy.ps1') -MsiPath $Msi
+if ($LASTEXITCODE -ne 0) { throw "Compiled installer policy failed for $Msi." }
 # wix writes its debug symbols (.wixpdb) next to the MSI; keep them out of the release assets.
 Remove-Item -Force -ErrorAction SilentlyContinue ([IO.Path]::ChangeExtension($Msi, '.wixpdb'))
 & (Join-Path $PSScriptRoot 'sign.ps1') $Msi
 
 # ---- portable zip ------------------------------------------------------------------------------
-$Portable = Join-Path $TargetDir "windows-package\deckcraft-$Version-windows-$Arch-portable"
+$Portable = Join-Path $TargetDir "windows-package\Lusk-Diapo-$Version-windows-$Arch-portable"
 Remove-Item -Recurse -Force $Portable -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Force -Path $Portable | Out-Null
 Copy-Item (Join-Path $Stage '*.exe') $Portable
-foreach ($f in 'README.md', 'LICENSE', 'LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE') {
+foreach ($f in 'README.md', 'LICENSE', 'LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE', 'ATTRIBUTION.md') {
   $p = Join-Path $Root $f
   if (Test-Path $p) { Copy-Item $p $Portable }
 }
@@ -144,7 +187,7 @@ if ($env:CRAFT_FONTS_DIR) {
     Copy-Item $ofl.FullName (Join-Path $Portable "OFL-$($ofl.Directory.Name).txt")
   }
 }
-$Zip = Join-Path $Dist "deckcraft-$Version-windows-$Arch-portable.zip"
+$Zip = Join-Path $Dist "Lusk-Diapo-$Version-windows-$Arch-portable.zip"
 Remove-Item -Force $Zip -ErrorAction SilentlyContinue
 Compress-Archive -Path $Portable -DestinationPath $Zip
 

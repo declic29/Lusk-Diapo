@@ -3,7 +3,7 @@
 # exports VERSION and NFPM_ARCH.
 #
 #   nfpm package -f packaging/linux/nfpm.yaml -p deb -t dist/release/
-name: deckcraft
+name: lusk-diapo
 arch: ${NFPM_ARCH}
 platform: linux
 version: ${VERSION}
@@ -13,14 +13,14 @@ release: 1
 section: editors
 priority: optional
 maintainer: ${DECKCRAFT_MAINTAINER}
-vendor: Learning Machines LLC
-homepage: https://getartcraft.com/apps/deckcraft
+vendor: Lusk
+homepage: https://www.lusk.bzh
 license: MIT OR Apache-2.0
 description: |-
-  Open-source, native presentation app that works the way PowerPoint users
-  expect. Themes, layouts, shapes, pictures, tables, charts, transitions and
-  animations; opens and saves PowerPoint (.pptx) files; full-screen slide show
-  with presenter view; GPU rendering (wgpu).
+  Lusk Diapo, free presentation software published by the Lusk association
+  (loi 1901). Themes, layouts, shapes, pictures, tables, charts, transitions
+  and animations; opens and saves PowerPoint (.pptx) files; full-screen slide
+  show with presenter view.
   Includes deckcraft-cli, a headless renderer and command runner.
 
 # The binaries link only glibc and libgcc_s directly. Windowing (X11/Wayland, xkbcommon) and the

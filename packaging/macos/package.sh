@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build, sign and (optionally) notarize the macOS release artifacts:
 #
-#   $DIST/deckcraft-<version>-macos-<arch>.dmg          DeckCraft.app on a drag-to-Applications DMG
-#   $DIST/deckcraft-cli-<version>-macos-<arch>.zip      the headless CLI
+#   $DIST/Lusk-Diapo-<version>-macos-<arch>.dmg          Lusk Diapo.app on a drag-to-Applications DMG
+#   $DIST/Lusk-Diapo-cli-<version>-macos-<arch>.zip      the headless CLI
 #
 # Usage: packaging/macos/package.sh [--arch universal|aarch64|x86_64] [--skip-build]
 #
@@ -39,9 +39,9 @@ export MACOSX_DEPLOYMENT_TARGET=11.0
 IDENTITY="${MACOS_SIGN_IDENTITY:--}"
 SHORT_VERSION="${VERSION%%-*}"
 WORK="$CARGO_TARGET_DIR/macos-package"
-APP="$WORK/DeckCraft.app"
-DMG="$DIST/deckcraft-$VERSION-macos-$ARCH.dmg"
-CLI_ZIP="$DIST/deckcraft-cli-$VERSION-macos-$ARCH.zip"
+APP="$WORK/Lusk Diapo.app"
+DMG="$DIST/Lusk-Diapo-$VERSION-macos-$ARCH.dmg"
+CLI_ZIP="$DIST/Lusk-Diapo-cli-$VERSION-macos-$ARCH.zip"
 
 NOTARIZE=0
 if [[ "$IDENTITY" = "-" ]]; then
@@ -52,7 +52,7 @@ else
   warn "macOS: APPLE_ID / APPLE_PASSWORD / APPLE_TEAM_ID incomplete; signed but not notarized"
 fi
 
-echo "==> DeckCraft $VERSION for macOS ($ARCH), identity: $IDENTITY, notarize: $NOTARIZE"
+echo "==> Lusk Diapo $VERSION for macOS ($ARCH), identity: $IDENTITY, notarize: $NOTARIZE"
 
 # ---- build -------------------------------------------------------------------------------------
 if [[ "$SKIP_BUILD" = 0 ]]; then
@@ -112,12 +112,12 @@ notarize() {
   fi
 }
 
-# ---- DeckCraft.app ----------------------------------------------------------------------------
+# ---- Lusk Diapo.app -----------------------------------------------------------------------
 echo "==> assembling $APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 # Executable and icon carry the display name (CFBundleExecutable / CFBundleIconFile).
-cp "$WORK/bin/deckcraft" "$APP/Contents/MacOS/DeckCraft"
-cp "$ROOT/assets/app-icon/deckcraft.icns" "$APP/Contents/Resources/DeckCraft.icns"
+cp "$WORK/bin/deckcraft" "$APP/Contents/MacOS/Lusk Diapo"
+cp "$ROOT/assets/app-icon/deckcraft.icns" "$APP/Contents/Resources/Lusk Diapo.icns"
 # The licences and README, as in the CLI zip, plus the licences of the embedded craft-fonts
 # fonts when built with CRAFT_FONTS_DIR. Before signing, so the seal covers them.
 copy_docs "$APP/Contents/Resources"
@@ -127,15 +127,19 @@ sed -e "s/@VERSION@/$VERSION/g" -e "s/@SHORT_VERSION@/$SHORT_VERSION/g" \
 plutil -lint "$APP/Contents/Info.plist"
 printf 'APPL????' >"$APP/Contents/PkgInfo"
 
+# codesign --strict rejects extended attributes such as com.apple.FinderInfo or a resource fork
+# ("Finder information, or similar detritus not allowed"); a source file copied in can carry them.
+# Clear them before signing; nothing after this point may write xattrs onto the bundle (#525).
+xattr -cr "$APP"
 # Sign inside-out: nested code first, then the bundle itself (no --deep on the final signature).
 # Today the only nested code is the main executable; frameworks/helpers would be signed here too.
-sign --options runtime --entitlements "$HERE/entitlements.plist" "$APP/Contents/MacOS/DeckCraft"
+sign --options runtime --entitlements "$HERE/entitlements.plist" "$APP/Contents/MacOS/Lusk Diapo"
 sign --options runtime --entitlements "$HERE/entitlements.plist" "$APP"
 codesign --verify --strict --deep --verbose=2 "$APP"
 
 if [[ "$NOTARIZE" = 1 ]]; then
-  ditto -c -k --keepParent "$APP" "$WORK/DeckCraft-notarize.zip"
-  notarize "$WORK/DeckCraft-notarize.zip"
+  ditto -c -k --keepParent "$APP" "$WORK/Lusk-Diapo-notarize.zip"
+  notarize "$WORK/Lusk-Diapo-notarize.zip"
   stapler_retry staple "$APP"
   stapler_retry validate "$APP"
   spctl --assess --type execute -vvv "$APP"
@@ -145,21 +149,69 @@ fi
 echo "==> building $DMG"
 STAGE="$WORK/dmg"
 mkdir -p "$STAGE"
-ditto "$APP" "$STAGE/DeckCraft.app"
+ditto "$APP" "$STAGE/Lusk Diapo.app"
 ln -s /Applications "$STAGE/Applications"
 # Finder window layout: background, icon size and positions (packaging/macos/dmg/README.md).
 mkdir -p "$STAGE/.background"
 cp "$HERE/dmg/background.tiff" "$STAGE/.background/background.tiff"
 cp "$HERE/dmg/dmg-layout.DS_Store" "$STAGE/.DS_Store"
-rm -f "$DMG" "$WORK/raw.dmg"
-# makehybrid + convert builds the image without attaching a device, unlike `create -srcfolder`,
-# which is flaky on CI runners ("Resource busy") and hangs in sandboxed sessions.
-# The volume name has no version: .DS_Store finds the background through an alias that includes it.
-hdiutil makehybrid -hfs -hfs-volume-name "DeckCraft" -hfs-openfolder "$STAGE" -o "$WORK/raw.dmg" "$STAGE"
-hdiutil convert "$WORK/raw.dmg" -format UDZO -imagekey zlib-level=9 -o "$DMG"
-rm -f "$WORK/raw.dmg"
+rm -f "$DMG"
+# Retries an hdiutil verb that attaches a device: on CI runners it fails now and then with
+# "Resource busy". Usage: hdiutil_retry <verb> <args...>; five tries with growing pauses.
+hdiutil_retry() {
+  local verb="$1"
+  local attempt
+  for attempt in 1 2 3 4 5; do
+    if hdiutil "$@"; then
+      return 0
+    fi
+    if [[ "$attempt" = 5 ]]; then
+      echo "error: hdiutil $verb failed 5 times" >&2
+      return 1
+    fi
+    warn "hdiutil $verb failed (attempt $attempt of 5); retrying in $((attempt * 10))s"
+    sleep $((attempt * 10))
+  done
+  return 1
+}
+# `hdiutil create -srcfolder` copies the staged files as they are. The previous
+# `makehybrid -hfs` + `convert` gave every file and folder in the image a com.apple.FinderInfo
+# (Finder location -1,-1), so the signed app failed `codesign --verify --deep --strict` inside the
+# mounted DMG and after copying it out (#525). The volume name has no version: .DS_Store finds the
+# background through an alias that includes it.
+hdiutil_retry create -srcfolder "$STAGE" -volname "Lusk Diapo" -fs HFS+ -format UDZO \
+  -imagekey zlib-level=9 -ov "$DMG"
 sign "$DMG"
 codesign --verify --strict --verbose=2 "$DMG"
+
+# Gate: the app inside the finished image, and a copy installed from it with ditto, must pass the
+# same strict check as the app before packaging, so a container signature can't hide a damaged app
+# signature (#525). Returns non-zero (set -e then stops the build) after detaching the image.
+verify_dmg_app() {
+  local dmg="$1" mount="$WORK/dmg-check" copy="$WORK/dmg-check-copy" rc=0
+  mkdir -p "$mount" "$copy"
+  hdiutil_retry attach -readonly -nobrowse -noautoopen -mountpoint "$mount" "$dmg" >/dev/null
+  echo "==> strict signature check of Lusk Diapo.app inside $(basename "$dmg")"
+  codesign --verify --deep --strict --verbose=2 "$mount/Lusk Diapo.app" || rc=1
+  if [[ "$rc" = 0 ]]; then
+    ditto "$mount/Lusk Diapo.app" "$copy/Lusk Diapo.app" || rc=1
+  fi
+  if [[ "$rc" = 0 ]]; then
+    echo "==> strict signature check of a ditto copy of it"
+    codesign --verify --deep --strict --verbose=2 "$copy/Lusk Diapo.app" || rc=1
+  fi
+  if [[ "$rc" = 0 ]] && [[ "$NOTARIZE" = 1 ]]; then
+    spctl --assess --type execute -vvv "$copy/Lusk Diapo.app" || rc=1
+  fi
+  if [[ "$rc" != 0 ]]; then
+    echo "error: Lusk Diapo.app in $(basename "$dmg") fails strict verification; extended attributes:" >&2
+    xattr -lr "$mount/Lusk Diapo.app" >&2 || true
+  fi
+  hdiutil_retry detach "$mount" >/dev/null || hdiutil detach "$mount" -force >/dev/null || rc=1
+  rm -rf "$copy"
+  return "$rc"
+}
+verify_dmg_app "$DMG"
 if [[ "$NOTARIZE" = 1 ]]; then
   notarize "$DMG"
   stapler_retry staple "$DMG"
@@ -169,14 +221,14 @@ fi
 
 # ---- CLI ---------------------------------------------------------------------------------------
 echo "==> building $CLI_ZIP"
-CLI_DIR="$WORK/deckcraft-cli-$VERSION-macos-$ARCH"
+CLI_DIR="$WORK/Lusk-Diapo-cli-$VERSION-macos-$ARCH"
 mkdir -p "$CLI_DIR"
 cp "$WORK/bin/deckcraft-cli" "$CLI_DIR/"
 copy_docs "$CLI_DIR"
 sign --options runtime "$CLI_DIR/deckcraft-cli"
 codesign --verify --strict --verbose=2 "$CLI_DIR/deckcraft-cli"
 rm -f "$CLI_ZIP"
-ditto -c -k --keepParent "$CLI_DIR" "$CLI_ZIP"
+ditto -c -k --norsrc --noextattr --keepParent "$CLI_DIR" "$CLI_ZIP"
 # A bare Mach-O can't carry a stapled ticket; Gatekeeper looks the notarization up online.
 if [[ "$NOTARIZE" = 1 ]]; then notarize "$CLI_ZIP"; fi
 

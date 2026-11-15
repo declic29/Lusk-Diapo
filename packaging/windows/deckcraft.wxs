@@ -3,49 +3,80 @@
   <?ifndef HasCraftFontLicences ?>
   <?define HasCraftFontLicences=0 ?>
   <?endif?>
-  <Package Name="DeckCraft" Manufacturer="Learning Machines LLC" Version="$(var.Version)" UpgradeCode="6F9C69E7-7825-40D2-BF26-C274DA676425" Scope="perUserOrMachine" Compressed="yes" Language="1033">
-    <SummaryInformation Description="DeckCraft presentations and slide shows" Manufacturer="Learning Machines LLC" />
+  <!-- Lusk Diapo (repris de Lusk Texte et Lusk Tab) : l'installateur en français, aux couleurs de
+       Lusk. Un nouveau produit (UpgradeCode à lui, à ne jamais changer), qui ne remplace ni
+       DeckCraft ni les autres logiciels Lusk. -->
+  <Package Name="Lusk Diapo" Manufacturer="Lusk" Version="$(var.Version)" UpgradeCode="83DB4EEC-1D6E-42BB-AC8B-7C904D735F06" Scope="perUserOrMachine" Compressed="yes" Language="1036" Codepage="1252">
+    <SummaryInformation Description="Lusk Diapo, présentations et diaporamas" Manufacturer="Lusk" />
     <?include $(sys.SOURCEFILEDIR)install-policy.wxi?>
     <!-- Same-version upgrades let successive pre-releases of one X.Y.Z replace each other
          (MSI versions are numeric, so 1.2.3-rc.1 and 1.2.3-rc.2 are both 1.2.3). -->
-    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="A newer version of DeckCraft is already installed." />
+    <MajorUpgrade AllowSameVersionUpgrades="yes" DowngradeErrorMessage="Une version plus récente de Lusk Diapo est déjà installée." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
+    <!-- For Apps and features only. The shortcuts name no Icon: see the Start menu shortcut. -->
     <Icon Id="DeckcraftIcon.ico" SourceFile="$(var.IconPath)" />
     <Property Id="ARPPRODUCTICON" Value="DeckcraftIcon.ico" />
-    <Property Id="ARPURLINFOABOUT" Value="https://getartcraft.com/apps/deckcraft" />
-    <Property Id="ARPURLUPDATEINFO" Value="https://getartcraft.com/apps/deckcraft" />
-    <Property Id="ARPHELPLINK" Value="https://discord.gg/artcraft" />
+    <Property Id="ARPURLINFOABOUT" Value="https://www.lusk.bzh" />
+    <Property Id="ARPURLUPDATEINFO" Value="https://www.lusk.bzh" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/declic29/Lusk-Diapo" />
+
+    <!-- Installer UI, in French (wix build -culture fr-FR, plus lusk-fr.wxl): WixUI_Minimal,
+         whose welcome page is replaced by Lusk's own (lusk-welcome.wxs: license, acceptance,
+         desktop shortcut), then progress and a finish page so people can see the install worked.
+         The bitmaps (logo and fox) come from images/generate.py; package.ps1 builds the license
+         RTF from LICENSE-MIT and LICENSE-APACHE. The finish page offers to launch Lusk Diapo
+         (ticked by default) through WixShellExec (WixToolset.Util.wixext); silent installs (/qn)
+         never show it. -->
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(sys.SOURCEFILEDIR)images\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(sys.SOURCEFILEDIR)images\dialog.bmp" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Lancer Lusk Diapo" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+    <Property Id="WixShellExecTarget" Value="[#DeckcraftExe]" />
+    <CustomAction Id="LaunchDeckcraft" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec" Impersonate="yes" Return="ignore" />
+    <UI>
+      <ui:WixUI Id="WixUI_Minimal" />
+      <UIRef Id="LuskWelcome" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchDeckcraft" Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
 
     <StandardDirectory Id="ProgramFiles6432Folder">
-      <Directory Id="CraftSuiteFolder" Name="ArtCraft">
-        <Directory Id="INSTALLFOLDER" Name="DeckCraft" />
+      <Directory Id="CraftSuiteFolder" Name="Lusk">
+        <Directory Id="INSTALLFOLDER" Name="Lusk Diapo" />
       </Directory>
     </StandardDirectory>
     <StandardDirectory Id="ProgramMenuFolder" />
+    <StandardDirectory Id="DesktopFolder" />
 
-    <Feature Id="Main" Title="DeckCraft" Level="1">
+    <!-- Desktop shortcut: ticked by default on the welcome page. An update keeps the earlier
+         choice: a copy installed without the shortcut (no DesktopShortcut value under
+         Software\LuskDiapo) gets none again. Silent installs: LUSKDESKTOP=0 leaves it out. -->
+    <Property Id="LUSK_DESKTOP_U" Secure="yes"><RegistrySearch Id="LuskDesktopUSearch" Root="HKCU" Key="Software\LuskDiapo" Name="DesktopShortcut" Type="raw" /></Property>
+    <Property Id="LUSK_DESKTOP_M" Secure="yes"><RegistrySearch Id="LuskDesktopMSearch" Root="HKLM" Key="Software\LuskDiapo" Name="DesktopShortcut" Type="raw" /></Property>
+    <SetProperty Id="LUSKDESKTOP" Action="LuskDesktopDefault" Value="1" After="AppSearch" Sequence="first" Condition="NOT LUSKDESKTOP AND (LUSK_DESKTOP_U OR LUSK_DESKTOP_M OR NOT (CRAFT_U_DIR OR CRAFT_M_DIR))" />
+    <Property Id="LUSKDESKTOP" Secure="yes" />
+
+    <Feature Id="Main" Title="Lusk Diapo" Level="1">
+      <ComponentGroupRef Id="AppNotices" />
       <?if $(var.HasCraftFontLicences) = 1 ?>
       <ComponentGroupRef Id="CraftFontLicences" />
       <?endif?>
       <ComponentGroupRef Id="DeckcraftFiles" />
     </Feature>
-  <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
-    <UI>
-      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2" Condition="NOT Installed" />
-      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" Condition="NOT Installed" />
-    </UI>
   </Package>
 
   <Fragment>
+    <ComponentGroup Id="AppNotices" Directory="INSTALLFOLDER">
+      <Files Include="$(var.AppNoticesDir)\**" />
+    </ComponentGroup>
     <?if $(var.HasCraftFontLicences) = 1 ?>
     <ComponentGroup Id="CraftFontLicences" Directory="INSTALLFOLDER">
       <Files Include="$(var.DocsDir)\**" />
     </ComponentGroup>
     <?endif?>
     <ComponentGroup Id="DeckcraftFiles" Directory="INSTALLFOLDER">
-      <Component Id="DeckcraftApp" Guid="D87EA444-41A4-4C19-922E-66D1A29461FF">
-        <File Id="DeckcraftNotice" Source="$(var.BinDir)\NOTICE" KeyPath="no" />
+      <Component Id="DeckcraftApp" Guid="84893C9B-0377-4F56-9591-ABA7265AEE0F">
         <File Id="DeckcraftExe" Source="$(var.BinDir)\deckcraft.exe" KeyPath="yes">
           <!-- No Icon here, so the shortcut shows the icon embedded in deckcraft.exe (build.rs). An
                MSI Icon is cached under %APPDATA%\Microsoft\Installer\{ProductCode}\, and every
@@ -54,29 +85,62 @@
                pointing at the deleted file and lost its icon (#1114). The exe's path survives
                updates; the shortcut is not advertised, so it targets that path and its icon is the
                exe's own. The Icon above stays for ARPPRODUCTICON (Apps and features). -->
-          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="DeckCraft" Description="DeckCraft presentations and slide shows" WorkingDirectory="INSTALLFOLDER" Advertise="no" />
+          <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="Lusk Diapo" Description="Lusk Diapo, présentations et diaporamas" WorkingDirectory="INSTALLFOLDER" Advertise="no" />
         </File>
 
-        <!-- .deckcraft: DeckCraft's own format. -->
-        <ProgId Id="DeckCraft.Presentation" Description="DeckCraft Presentation" Icon="DeckcraftExe" IconIndex="0">
+        <RegistryValue Root="HKMU" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\deckcraft.exe" Value="[#DeckcraftExe]" Type="string" />
+      <RegistryValue Root="HKMU" Key="Software\LuskDiapo" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
+      <!-- Lusk : le module de mise à jour (craft-update) reconnaît une copie installée par ce MSI au
+           dossier qu'il lit sous cette clé ; sans elle, il la prend pour une version portable et
+           réclame un .zip. Le nom de la clé est celui que la bibliothèque lit, pas un éditeur. -->
+      <RegistryValue Root="HKMU" Key="Software\Learning Machines LLC\Lusk Diapo" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
+      </Component>
+
+      <!-- File associations. .deckcraft, Lusk Diapo's own format, opens with it. The PowerPoint
+           types each get a Lusk Diapo ProgId (name, icon, open command) and are listed under the
+           extension's OpenWithProgids, so Lusk Diapo shows in Explorer's "Open with"; they are
+           also its Capabilities (RegisteredApplications), so it appears in Settings › Default
+           apps, where the user makes it the default. The installer never takes over .pptx from
+           another app. Removed again on uninstall. -->
+      <Component Id="DeckcraftFileTypes" Guid="03A1B4FC-0777-43A6-A253-4111AEDFDAEE">
+        <RegistryValue Root="HKMU" Key="Software\RegisteredApplications" Name="LuskDiapo" Value="Software\LuskDiapo\Capabilities" Type="string" KeyPath="yes" />
+        <RegistryValue Root="HKMU" Key="Software\LuskDiapo\Capabilities" Name="ApplicationName" Value="Lusk Diapo" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskDiapo\Capabilities" Name="ApplicationDescription" Value="Le logiciel de présentation libre de l'association Lusk ; ouvrez et enregistrez des présentations PowerPoint." Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskDiapo\Capabilities" Name="ApplicationIcon" Value="&quot;[#DeckcraftExe]&quot;,0" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe" Name="FriendlyAppName" Value="Lusk Diapo" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\shell\open\command" Value="&quot;[#DeckcraftExe]&quot; &quot;%1&quot;" Type="string" />
+
+        <ProgId Id="LuskDiapo.Document" Description="Présentation Lusk Diapo" Icon="DeckcraftExe" IconIndex="0">
           <Extension Id="deckcraft" ContentType="application/x-deckcraft">
-            <Verb Id="open" Command="Open" TargetFile="DeckcraftExe" Argument="&quot;%1&quot;" />
+            <Verb Id="open" Command="Ouvrir" TargetFile="DeckcraftExe" Argument="&quot;%1&quot;" />
           </Extension>
         </ProgId>
-
-        <!-- "Open with" for PowerPoint formats, without becoming the default. -->
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe" Name="FriendlyAppName" Value="DeckCraft" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\shell\open\command" Value="&quot;[#DeckcraftExe]&quot; &quot;%1&quot;" Type="string" />
         <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\SupportedTypes" Name=".deckcraft" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\SupportedTypes" Name=".pptx" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\SupportedTypes" Name=".potx" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\SupportedTypes" Name=".ppsx" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.pptx\OpenWithProgids" Name="DeckCraft.Presentation" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.potx\OpenWithProgids" Name="DeckCraft.Presentation" Value="" Type="string" />
-        <RegistryValue Root="HKMU" Key="Software\Classes\.ppsx\OpenWithProgids" Name="DeckCraft.Presentation" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskDiapo\Capabilities\FileAssociations" Name=".deckcraft" Value="LuskDiapo.Document" Type="string" />
 
-        <RegistryValue Root="HKMU" Key="Software\Microsoft\Windows\CurrentVersion\App Paths\deckcraft.exe" Value="[#DeckcraftExe]" Type="string" />
-      <RegistryValue Root="HKMU" Key="Software\DeckCraft" Name="InstallDir" Value="[INSTALLFOLDER]" Type="string" />
+        <ProgId Id="LuskDiapo.Presentation" Description="Présentation PowerPoint" Icon="DeckcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskDiapo.Presentation\shell\open\command" Value="&quot;[#DeckcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.pptx\OpenWithProgids" Name="LuskDiapo.Presentation" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\SupportedTypes" Name=".pptx" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskDiapo\Capabilities\FileAssociations" Name=".pptx" Value="LuskDiapo.Presentation" Type="string" />
+
+        <ProgId Id="LuskDiapo.Template" Description="Modèle PowerPoint" Icon="DeckcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskDiapo.Template\shell\open\command" Value="&quot;[#DeckcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.potx\OpenWithProgids" Name="LuskDiapo.Template" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\SupportedTypes" Name=".potx" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskDiapo\Capabilities\FileAssociations" Name=".potx" Value="LuskDiapo.Template" Type="string" />
+
+        <ProgId Id="LuskDiapo.SlideShow" Description="Diaporama PowerPoint" Icon="DeckcraftExe" IconIndex="0" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\LuskDiapo.SlideShow\shell\open\command" Value="&quot;[#DeckcraftExe]&quot; &quot;%1&quot;" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\.ppsx\OpenWithProgids" Name="LuskDiapo.SlideShow" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\Classes\Applications\deckcraft.exe\SupportedTypes" Name=".ppsx" Value="" Type="string" />
+        <RegistryValue Root="HKMU" Key="Software\LuskDiapo\Capabilities\FileAssociations" Name=".ppsx" Value="LuskDiapo.SlideShow" Type="string" />
+      </Component>
+
+      <!-- No Icon either (#1114): it targets deckcraft.exe and shows the exe's own icon. -->
+      <Component Id="LuskDesktopShortcut" Directory="DesktopFolder" Guid="626D8638-BB4B-4F8F-9B28-66287E645184" Condition="LUSKDESKTOP = &quot;1&quot;">
+        <Shortcut Id="DesktopShortcut" Name="Lusk Diapo" Description="Lusk Diapo, présentations et diaporamas" Target="[#DeckcraftExe]" WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKMU" Key="Software\LuskDiapo" Name="DesktopShortcut" Value="1" Type="integer" KeyPath="yes" />
       </Component>
 
       <Component Id="DeckcraftCli">

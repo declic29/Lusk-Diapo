@@ -5,13 +5,19 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleDevelopmentRegion</key>
-  <string>en</string>
+  <string>fr</string>
+  <!-- The interface is in French; declare it for AppKit's system dialogs (open and save panels,
+       overwrite confirmation). -->
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>fr</string>
+  </array>
   <key>CFBundleDisplayName</key>
-  <string>DeckCraft</string>
+  <string>Lusk Diapo</string>
   <key>CFBundleName</key>
-  <string>DeckCraft</string>
+  <string>Lusk Diapo</string>
   <key>CFBundleExecutable</key>
-  <string>DeckCraft</string>
+  <string>Lusk Diapo</string>
   <key>CFBundleIdentifier</key>
   <string>bzh.lusk.diapo</string>
   <key>CFBundleInfoDictionaryVersion</key>
@@ -29,7 +35,7 @@
   <key>DeckCraftBuildCommit</key>
   <string>@BUILD_SHA@</string>
   <key>CFBundleIconFile</key>
-  <string>DeckCraft</string>
+  <string>Lusk Diapo</string>
   <key>LSApplicationCategoryType</key>
   <string>public.app-category.productivity</string>
   <!-- Must match MACOSX_DEPLOYMENT_TARGET in package.sh. Big Sur is the first release on
@@ -43,24 +49,24 @@
   <key>NSRequiresAquaSystemAppearance</key>
   <false/>
   <key>NSHumanReadableCopyright</key>
-  <string>Copyright © the DeckCraft authors. MIT OR Apache-2.0.</string>
+  <string>© 2026 Lusk, association loi 1901. Logiciel libre sous licence MIT OR Apache-2.0.</string>
 
-  <!-- The documents DeckCraft opens, so Finder's Open With and "Change All" can offer it (the
+  <!-- The documents Lusk Diapo opens, so Finder's Open With and "Change All" can offer it (the
        Apple events arrive through apps/deckcraft/src/apple_events.rs). PowerPoint stays the
-       preferred app for its formats unless the user picks DeckCraft. The same set as the Windows
+       preferred app for its formats unless the user picks Lusk Diapo. The same set as the Windows
        installer (deckcraft.wxs) and the Linux desktop file; a test in apps/deckcraft keeps
        them equal. -->
   <key>CFBundleDocumentTypes</key>
   <array>
     <dict>
       <key>CFBundleTypeName</key>
-      <string>DeckCraft Presentation</string>
+      <string>Lusk Diapo Presentation</string>
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>LSHandlerRank</key>
       <string>Owner</string>
       <key>CFBundleTypeIconFile</key>
-      <string>DeckCraft</string>
+      <string>Lusk Diapo</string>
       <key>LSItemContentTypes</key>
       <array>
         <string>bzh.lusk.diapo.presentation</string>
@@ -116,21 +122,21 @@
     </dict>
   </array>
 
-  <!-- DeckCraft's own format: a zip of a JSON manifest plus media. -->
+  <!-- Lusk Diapo's own format (.deckcraft): a zip of a JSON manifest plus media. -->
   <key>UTExportedTypeDeclarations</key>
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
       <string>bzh.lusk.diapo.presentation</string>
       <key>UTTypeDescription</key>
-      <string>DeckCraft Presentation</string>
+      <string>Lusk Diapo Presentation</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
         <string>public.presentation</string>
       </array>
       <key>UTTypeIconFile</key>
-      <string>DeckCraft</string>
+      <string>Lusk Diapo</string>
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.filename-extension</key>
