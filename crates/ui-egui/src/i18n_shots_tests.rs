@@ -130,6 +130,7 @@ fn i18n_shots() {
         "spelling",
         "pasteSpecial",
         "find",
+        "close",
         "accessibility",
         "language",
         "customShow",
