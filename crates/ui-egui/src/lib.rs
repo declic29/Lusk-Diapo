@@ -11,9 +11,10 @@
 #[cfg(not(target_arch = "wasm32"))]
 pub const UPDATE_APP: craft_update::app::App = craft_update::app::App {
     // Lusk Diapo (comme Lusk Texte et Lusk Tab) : les versions publiées par l'association sur
-    // GitHub (`declic29/Lusk-Diapo`), et non celles de Lusk Diapo. Les fichiers s'appellent
-    // `Lusk-Diapo-<version>-<système>-<architecture>.<ext>` ; l'identifiant reste `deckcraft`, le
-    // nom du programme (`deckcraft.exe`), que l'outil de mise à jour reconnaît aussi.
+    // GitHub (`declic29/Lusk-Diapo`). Les fichiers s'appellent
+    // `Lusk-Diapo-<version>-<système>-<architecture>.<ext>` (le nom de `former_ids`, que notre
+    // copie de craft-update, dans vendor/, cherche aussi) ; l'identifiant reste `deckcraft`, le
+    // nom du programme (`deckcraft.exe`) et de ses dossiers.
     id: "deckcraft",
     name: "Lusk Diapo",
     tagline: "Présentations et diaporamas",
@@ -515,3 +516,38 @@ mod i18n_shots_tests;
 mod ribbon_sweep_tests;
 #[cfg(test)]
 mod tests;
+
+/// Lusk Diapo : la mise à jour trouve les fichiers publiés sous le nom « Lusk-Diapo-… », sans
+/// copie au nom technique « deckcraft-… » dans la Release.
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod lusk_update_tests {
+    use craft_update::{Arch, Asset, Os, PackageKind, Platform, Release, pick_asset};
+
+    #[test]
+    fn updates_find_the_lusk_diapo_files() {
+        let names = [
+            "Lusk-Diapo-1.0.1-windows-x64.msi",
+            "Lusk-Diapo-1.0.1-windows-x64-portable.zip",
+            "Lusk-Diapo-1.0.1-macos-universal.dmg",
+            "Lusk-Diapo-1.0.1-linux-x86_64.AppImage",
+            "Lusk-Diapo-Windows.msi",
+            "SHA256SUMS.txt",
+        ];
+        let release = Release {
+            assets: names.iter().map(|n| Asset { name: (*n).into(), size: 1, url: format!("https://x/{n}"), sha256: None }).collect(),
+            ..Release::default()
+        };
+        let stems: Vec<&str> = super::UPDATE_APP.stems().collect();
+        for (os, arch, kind, expected) in [
+            (Os::Windows, Arch::X64, PackageKind::Msi, "Lusk-Diapo-1.0.1-windows-x64.msi"),
+            (Os::Windows, Arch::X64, PackageKind::PortableZip, "Lusk-Diapo-1.0.1-windows-x64-portable.zip"),
+            (Os::MacOs, Arch::Arm64, PackageKind::Dmg, "Lusk-Diapo-1.0.1-macos-universal.dmg"),
+            (Os::Linux, Arch::X64, PackageKind::AppImage, "Lusk-Diapo-1.0.1-linux-x86_64.AppImage"),
+        ] {
+            let picked = pick_asset(&release, &stems, Platform { os, arch }, &[kind]).map(|(a, _)| a.name.as_str());
+            assert_eq!(picked, Some(expected), "{os:?} {kind:?}");
+        }
+        // The old way, with the technical id only, finds nothing: the copies were needed then.
+        assert!(pick_asset(&release, &["deckcraft"], Platform { os: Os::Windows, arch: Arch::X64 }, &[PackageKind::Msi]).is_none());
+    }
+}

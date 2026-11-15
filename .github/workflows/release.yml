@@ -251,17 +251,6 @@ jobs:
           cp "Lusk-Diapo-$VERSION-macos-universal.dmg" Lusk-Diapo-Mac.dmg
           cp "Lusk-Diapo-$VERSION-linux-x86_64.AppImage" Lusk-Diapo-Linux.AppImage
           for deb in Lusk-Diapo-"$VERSION"*.deb; do cp "$deb" Lusk-Diapo-Linux.deb; done
-      - name: Copies au nom technique, pour le module de mise à jour
-        working-directory: dist
-        # Le module de mise à jour (craft-update) cherche le fichier à installer sous le nom
-        # technique de l'application (deckcraft-<version>-…), pas sous Lusk-Diapo-<version>-… : sans
-        # ces copies, il trouve la nouvelle version mais refuse de l'installer (« has no … »).
-        run: |
-          for f in Lusk-Diapo-"$VERSION"-*; do
-            [ -e "$f" ] || continue
-            cp "$f" "deckcraft${f#Lusk-Diapo}"
-          done
-          ls -1
       - name: Calculer les empreintes (SHA256SUMS.txt)
         working-directory: dist
         run: |

@@ -83,6 +83,9 @@ Code dependencies
 - The H.264, HEVC, VP9 and AV1 crates under crates/ are ported from FilmCraft (same owner,
   MIT OR Apache-2.0). The Opus decoder (craft-audio) and the MP4, Matroska and Ogg demuxers
   (craft-media) come from craft-libs (same owner, MIT OR Apache-2.0).
+- vendor/craft-update is a copy of craft-libs' update module (crates/update at commit 63196e6,
+  MIT OR Apache-2.0), modified by Lusk so that updates find release files under every name of
+  the app (vendor/craft-update/LISEZ-MOI.md).
 - The French thesaurus (crates/engine/data/thesaurus_fr.txt) is the myThes « Dictionnaire des
   synonymes français » 2.3 by Frédéric Labbé (Dicollecte, https://grammalecte.net), taken from
   LibreOffice's dictionaries (fr_FR/thes_fr.dat) under the GNU Lesser General Public License 2.1
