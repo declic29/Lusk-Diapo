@@ -30,7 +30,9 @@ use print::{export, print};
 pub use print::{print_page_size, print_params, print_slides};
 
 /// Width of the side menu.
-pub const NAV_W: f32 = 160.0;
+/// Width of the side menu: wide enough for its longest French entry (« Enregistrer sous »)
+/// beside its icon, with room to spare (Lusk Tab: 196).
+pub const NAV_W: f32 = 184.0;
 /// Height of a side-menu entry (the back arrow's row is a little taller).
 const ITEM_H: f32 = 40.0;
 const BACK_H: f32 = 46.0;
@@ -455,7 +457,11 @@ fn nav_item(ui: &mut Ui, nav: Nav, bs: &Backstage, index: usize, t: &Tokens) -> 
     } else {
         icons::paint(p, icon_rect, nav.icon(), ink, false);
     }
-    p.text(pos2(rect.left() + 44.0, rect.center().y), Align2::LEFT_CENTER, label, theme::font(13.0), ink);
+    // A label that would still run past its row (a longer translation) is drawn smaller.
+    let room = row.right() - 6.0 - (rect.left() + 44.0);
+    let width = p.layout_no_wrap(label.to_string(), theme::font(13.0), ink).size().x;
+    let size = if width > room { (13.0 * room / width).max(10.0) } else { 13.0 };
+    p.text(pos2(rect.left() + 44.0, rect.center().y), Align2::LEFT_CENTER, label, theme::font(size), ink);
     resp
 }
 

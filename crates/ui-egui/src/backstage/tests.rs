@@ -738,3 +738,21 @@ fn about_appearance_stays_on_the_page_at_minimum_width() {
     let r = h.query_all_by_role_and_label(Role::ComboBox, "Appearance").next().expect("Appearance selector").rect();
     assert!(r.right() <= 900.0, "Appearance selector ends at {}, inside the window", r.right());
 }
+
+/// Lusk Diapo : chaque entrée du menu latéral, en français, tient dans sa case à côté de son
+/// icône (« Enregistrer sous » débordait).
+#[test]
+fn every_side_menu_label_fits_its_row_in_french() {
+    crate::i18n::set_french_on_this_thread(Some(true));
+    let app = new_app();
+    let h = harness(app);
+    let painter = egui::Painter::new(h.ctx.clone(), egui::LayerId::background(), egui::Rect::EVERYTHING);
+    let (top, bottom) = entries(true);
+    for nav in top.into_iter().chain(bottom) {
+        let label = crate::i18n::tr(nav.label());
+        let w = painter.layout_no_wrap(label.to_string(), crate::theme::font(13.0), egui::Color32::WHITE).size().x;
+        // Text starts 44 px in; the row's outline ends 6 px before the menu's edge.
+        assert!(44.0 + w <= NAV_W - 12.0, "« {label} » ({w:.0} px) is too wide for the {NAV_W} px menu");
+    }
+    crate::i18n::set_french_on_this_thread(None);
+}
