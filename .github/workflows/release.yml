@@ -273,6 +273,14 @@ jobs:
             echo "Les personnes qui ont déjà Lusk Diapo reçoivent cette version par Fichier › Mises à jour."
           } >"$RUNNER_TEMP/notes.md"
           if gh release view "$tag" >/dev/null 2>&1; then
+            # La Release existe déjà (un essai précédent) : on retire les fichiers que cette
+            # fabrication ne produit plus (par exemple les anciennes copies deckcraft-…).
+            gh release view "$tag" --json assets --jq '.assets[].name' | while IFS= read -r old; do
+              if [ ! -e "dist/$old" ]; then
+                echo "Retiré de la Release : $old"
+                gh release delete-asset "$tag" "$old" --yes
+              fi
+            done
             gh release upload "$tag" dist/* --clobber
           else
             gh release create "$tag" dist/* --draft --target "$GITHUB_SHA" \
