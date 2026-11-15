@@ -10,6 +10,7 @@ use super::language::selected_language;
 use super::paragraph::paragraph_dialog;
 use super::photo_album::photo_album_dialog;
 use super::preferences::{preferences_snapshot, restore_preferences};
+use super::save_prompt::{Choice, save_prompt};
 use super::size_position::size_position_dialog;
 use super::slide_size::{put_slide_dim, slide_dim_points, unit_abbr};
 use super::tabs::tabs_dialog;
@@ -178,11 +179,6 @@ fn dlg_setup_show(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     ok || cancel
 }
 
-/// A presentation name in quotes: « Nom » in French, “Name” in English.
-fn quoted(name: &str) -> String {
-    if crate::i18n::french() { format!("«\u{a0}{name}\u{a0}»") } else { format!("“{name}”") }
-}
-
 fn dlg_quit(app: &mut SlideApp, ui: &mut Ui, _d: &mut Dialog) -> bool {
     let names: Vec<String> = app.session.documents().iter().filter(|d| d.is_dirty()).map(|d| d.title()).collect();
     if names.is_empty() {
@@ -190,70 +186,46 @@ fn dlg_quit(app: &mut SlideApp, ui: &mut Ui, _d: &mut Dialog) -> bool {
         ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
         return true;
     }
-    let what = if names.len() == 1 { quoted(&names[0]) } else { crate::i18n::trf("{0} presentations", &[&names.len()]) };
-    ui.label(egui::RichText::new(crate::i18n::trf("Do you want to save the changes you made to {0}?", &[&what])).strong());
-    ui.label(crate::i18n::tr("Your changes will be lost if you don't save them."));
-    ui.add_space(8.0);
-    let mut done = false;
-    ui.horizontal(|ui| {
-        let t = Tokens::get(ui.ctx());
-        if ui.add(egui::Button::new(crate::i18n::tr("Don't Save")).min_size(vec2(84.0, 24.0))).clicked() {
+    match save_prompt(ui, &names) {
+        Some(Choice::DontSave) => {
             let _ = app.session.execute("file.recovery.discard", &json!({}));
             app.quit_confirmed = true;
             ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
-            done = true;
+            true
         }
-        ui.allocate_ui_with_layout(vec2(ui.available_width(), 28.0), egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let save = ui
-                .add(egui::Button::new(egui::RichText::new(crate::i18n::tr("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)));
-            if save.clicked() || ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                if app.save_all() {
-                    app.quit_confirmed = true;
-                    ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
-                }
-                done = true;
+        Some(Choice::Save) => {
+            if app.save_all() {
+                app.quit_confirmed = true;
+                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
             }
-            if ui.add(egui::Button::new(crate::i18n::tr("Cancel")).min_size(vec2(72.0, 24.0))).clicked() {
-                done = true;
-            }
-        });
-    });
-    done
+            true
+        }
+        Some(Choice::Cancel) => true,
+        None => false,
+    }
 }
 
 fn dlg_close(app: &mut SlideApp, ui: &mut Ui, _d: &mut Dialog) -> bool {
     // File › Close and Ctrl+W on a presentation with unsaved changes.
     let Some(name) = app.session.active().map(|d| d.title()) else { return true };
-    let what = quoted(&name);
-    ui.label(egui::RichText::new(crate::i18n::trf("Do you want to save the changes you made to {0}?", &[&what])).strong());
-    ui.label(crate::i18n::tr("Your changes will be lost if you don't save them."));
-    ui.add_space(8.0);
-    let mut done = false;
-    ui.horizontal(|ui| {
-        let t = Tokens::get(ui.ctx());
-        if ui.add(egui::Button::new(crate::i18n::tr("Don't Save")).min_size(vec2(84.0, 24.0))).clicked() {
+    match save_prompt(ui, &[name]) {
+        Some(Choice::DontSave) => {
             run(app, "file.close", json!({}));
-            done = true;
+            true
         }
-        ui.allocate_ui_with_layout(vec2(ui.available_width(), 28.0), egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let save = ui
-                .add(egui::Button::new(egui::RichText::new(crate::i18n::tr("Save")).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)));
-            if save.clicked() || ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                app.save();
-                // In the browser a save is a download: the presentation stays "unsaved". A page
-                // that keeps the files saves it for real, so a failed save keeps it open.
-                let web = app.services.pick_save.is_none() && app.services.download.is_some() && app.services.host_save.is_none();
-                if web || app.session.active().is_some_and(|d| !d.is_dirty()) {
-                    run(app, "file.close", json!({}));
-                }
-                done = true;
+        Some(Choice::Save) => {
+            app.save();
+            // In the browser a save is a download: the presentation stays "unsaved". A page
+            // that keeps the files saves it for real, so a failed save keeps it open.
+            let web = app.services.pick_save.is_none() && app.services.download.is_some() && app.services.host_save.is_none();
+            if web || app.session.active().is_some_and(|d| !d.is_dirty()) {
+                run(app, "file.close", json!({}));
             }
-            if ui.add(egui::Button::new(crate::i18n::tr("Cancel")).min_size(vec2(72.0, 24.0))).clicked() {
-                done = true;
-            }
-        });
-    });
-    done
+            true
+        }
+        Some(Choice::Cancel) => true,
+        None => false,
+    }
 }
 
 fn dlg_bullets(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {

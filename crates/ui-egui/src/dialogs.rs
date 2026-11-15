@@ -91,6 +91,10 @@ pub fn show(app: &mut SlideApp, ctx: &egui::Context) {
         // its controls stay where they were, instead of the whole window moving up.
         .anchor(Align2::CENTER_TOP, vec2(0.0, 110.0))
         .open(&mut open);
+    // Lusk Diapo : « Enregistrer les modifications ? » porte son propre titre, sans barre de titre.
+    if matches!(d.id.as_str(), "close" | "quit") {
+        window = window.title_bar(false);
+    }
     // Two columns of colour rows plus Save must fit the first frame (Theme Colors), as must Save
     // in Theme Fonts. A later resize clips the buttons (the window size sticks) and clicks miss them.
     if d.id == "themeColors" {
@@ -231,6 +235,7 @@ mod language;
 mod paragraph;
 mod photo_album;
 mod preferences;
+mod save_prompt;
 mod size_position;
 mod slide_size;
 mod smartart;

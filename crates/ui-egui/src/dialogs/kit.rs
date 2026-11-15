@@ -78,6 +78,37 @@ pub(crate) fn icon_button(ui: &mut Ui, icon: Icon, label: &str, enabled: bool) -
     resp
 }
 
+/// The main button of a window: accent fill, an icon and its label (translated), 30 px high.
+pub(crate) fn primary_button(ui: &mut Ui, icon: Icon, label: &str) -> Response {
+    let t = Tokens::get(ui.ctx());
+    let label = crate::i18n::tr(label);
+    let font = theme::bold(13.0);
+    let galley = ui.painter().layout_no_wrap(label.to_string(), font.clone(), t.accent_text);
+    let size = vec2((galley.size().x + 50.0).max(110.0), 30.0);
+    let (rect, resp) = ui.allocate_exact_size(size, Sense::click());
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, label));
+    if ui.is_rect_visible(rect) {
+        let p = ui.painter();
+        let fill = if resp.is_pointer_button_down_on() {
+            t.accent.gamma_multiply(0.8)
+        } else if resp.hovered() {
+            t.accent.gamma_multiply(0.9)
+        } else {
+            t.accent
+        };
+        p.rect_filled(rect, CornerRadius::same(6), fill);
+        if resp.has_focus() {
+            p.rect_stroke(rect.expand(2.0), CornerRadius::same(8), Stroke::new(1.5, t.text), StrokeKind::Outside);
+        }
+        let content_w = 16.0 + 8.0 + galley.size().x;
+        let x0 = rect.center().x - content_w / 2.0;
+        let ir = Rect::from_center_size(pos2(x0 + 8.0, rect.center().y), vec2(16.0, 16.0));
+        icons::paint(p, ir, icon, t.accent_text, false);
+        p.text(pos2(x0 + 24.0, rect.center().y), Align2::LEFT_CENTER, label, font, t.accent_text);
+    }
+    resp
+}
+
 /// A square button showing only an icon; `label` (translated) is its tooltip and its name for
 /// screen readers.
 pub(crate) fn icon_only(ui: &mut Ui, icon: Icon, label: &str, enabled: bool) -> Response {

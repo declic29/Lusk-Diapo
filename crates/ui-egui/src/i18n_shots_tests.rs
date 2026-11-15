@@ -91,6 +91,16 @@ fn i18n_shots() {
             let _ = app.run("design.applyIdea", json!({"id": "lusk:cartes"}));
         });
     }
+    if want("dialogue-quitter") {
+        // Quitter avec trois présentations modifiées.
+        shoot(&dir, "dialogue-quitter", |app| {
+            for _ in 0..3 {
+                let _ = app.session.execute("file.new", &json!({}));
+                let _ = app.session.execute("shape.insert", &json!({"preset": "rect", "rect": [80.0, 80.0, 100.0, 60.0]}));
+            }
+            app.dialog = Some(crate::dialogs::Dialog::new("quit"));
+        });
+    }
     if want("palette") {
         shoot(&dir, "palette", |app| app.palette = Some(("police".into(), 0)));
     }
