@@ -124,6 +124,7 @@ fn i18n_shots() {
         "export",
         "symbol",
         "photoAlbum",
+        "comment",
         "replaceFonts",
         "equation",
         "dateTime",
@@ -144,6 +145,26 @@ fn i18n_shots() {
         if want(&name) {
             shoot(&dir, &name, |app| app.dialog = Some(crate::dialogs::Dialog::new(id)));
         }
+    }
+    if want("dialogue-photoAlbum-rempli") {
+        // The album with two pictures and a text box, the second picture turned a quarter.
+        let data = deckcraft_engine::cmd::base64_encode(include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/bzh.lusk.diapo.png"));
+        shoot(&dir, "dialogue-photoAlbum-rempli", |app| {
+            let mut d = crate::dialogs::Dialog::new("photoAlbum");
+            d.params = json!({"items": [
+                {"name": "aurore.png", "data": data},
+                {"name": "fjord.png", "data": data, "rot": 90},
+                {"text": "Nos vacances en Norvège"}
+            ], "layout": "2title", "frame": "rounded"});
+            d.fields.insert("sel".into(), "1".into());
+            app.dialog = Some(d);
+        });
+    }
+    if want("volet-thesaurus-maison") {
+        shoot(&dir, "volet-thesaurus-maison", |app| {
+            app.ui.pane = Some("thesaurus".into());
+            app.thesaurus_query = "maison".into();
+        });
     }
     for pane in ["format", "background", "animation", "selection", "comments", "designer", "thesaurus"] {
         let name = format!("volet-{pane}");

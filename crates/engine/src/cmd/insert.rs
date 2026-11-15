@@ -461,13 +461,24 @@ mod tests {
         assert!(v["text"].as_str().is_some_and(|t| t.contains(',')), "{v}");
     }
 
+    /// Lusk Diapo : month and day names in French (« vendredi 9 octobre 2026 »).
     #[test]
-    fn a_named_format_in_french_and_a_bad_value_change_nothing() {
+    fn a_named_format_in_french_is_written_in_french() {
+        let mut s = session();
+        edit_title(&mut s);
+        let v = s.execute("insert.dateTime", &json!({"format": "datetime3", "update": false, "language": "fr-FR"})).unwrap();
+        let text = v["text"].as_str().unwrap_or("");
+        let months = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+        assert!(months.iter().any(|m| text.contains(m)), "{text}");
+    }
+
+    #[test]
+    fn a_named_format_in_swedish_and_a_bad_value_change_nothing() {
         let mut s = session();
         edit_title(&mut s);
         let rev = s.doc().unwrap().revision;
         let undos = undo(&s);
-        let err = s.execute("insert.dateTime", &json!({"format": "datetime2", "language": "fr-FR"})).unwrap_err();
+        let err = s.execute("insert.dateTime", &json!({"format": "datetime2", "language": "sv-SE"})).unwrap_err();
         assert!(err.to_string().contains("isn't available"), "{err}");
         assert_eq!(s.doc().unwrap().revision, rev);
         assert_eq!(undo(&s), undos);

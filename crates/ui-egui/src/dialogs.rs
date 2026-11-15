@@ -87,7 +87,9 @@ pub fn show(app: &mut SlideApp, ctx: &egui::Context) {
         .id(egui::Id::unique(("dialog", d.id.clone())))
         .collapsible(false)
         .resizable(false)
-        .anchor(Align2::CENTER_CENTER, vec2(0.0, -40.0))
+        // Anchored by its top: a window that grows (a row added, a message shown) grows down and
+        // its controls stay where they were, instead of the whole window moving up.
+        .anchor(Align2::CENTER_TOP, vec2(0.0, 110.0))
         .open(&mut open);
     // Two columns of colour rows plus Save must fit the first frame (Theme Colors), as must Save
     // in Theme Fonts. A later resize clips the buttons (the window size sticks) and clicks miss them.
@@ -126,15 +128,21 @@ pub fn show(app: &mut SlideApp, ctx: &egui::Context) {
     }
 }
 
+/// A dialog's main button in the interface's language. « Insert » is the ribbon tab
+/// (« Insertion ») in the table; on a button it is the verb, « Insérer ».
+fn ok_text(label: &str) -> String {
+    if label == "Insert" && crate::i18n::french() { "Insérer".into() } else { crate::i18n::trs(label) }
+}
+
 fn buttons(ui: &mut Ui, ok_label: &str) -> (bool, bool) {
     let mut ok = false;
     let mut cancel = false;
-    ui.add_space(8.0);
-    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+    kit::divider(ui);
+    // A row of its own (not `with_layout`, which took all the height left and centred the
+    // buttons in it, leaving the window half empty below them).
+    ui.allocate_ui_with_layout(vec2(ui.available_width(), 28.0), egui::Layout::right_to_left(egui::Align::Center), |ui| {
         let t = Tokens::get(ui.ctx());
-        if ui
-            .add(egui::Button::new(egui::RichText::new(crate::i18n::trs(ok_label)).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0)))
-            .clicked()
+        if ui.add(egui::Button::new(egui::RichText::new(ok_text(ok_label)).color(t.accent_text)).fill(t.accent).min_size(vec2(72.0, 24.0))).clicked()
             || ui.input(|i| i.key_pressed(egui::Key::Enter))
         {
             ok = true;
@@ -218,12 +226,15 @@ mod find;
 mod font;
 mod grid_options;
 mod hyperlink;
+pub(crate) mod kit;
 mod language;
 mod paragraph;
 mod photo_album;
 mod preferences;
 mod size_position;
 mod slide_size;
+mod smartart;
+mod styled;
 mod tabs;
 mod theme_colors;
 mod theme_fonts;

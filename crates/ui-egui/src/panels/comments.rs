@@ -68,7 +68,7 @@ pub(super) fn revisions(app: &mut SlideApp, ui: &mut Ui) {
 
 pub(super) fn comments(app: &mut SlideApp, ui: &mut Ui) {
     let t = Tokens::get(ui.ctx());
-    if ui.button(crate::i18n::tr("+ New Comment")).clicked() {
+    if crate::dialogs::kit::icon_button(ui, crate::icons::Icon::NewComment, "New Comment", true).clicked() {
         app.dialog = Some(crate::dialogs::Dialog::new("comment"));
     }
     ui.separator();
@@ -137,7 +137,7 @@ fn comment_card(app: &mut SlideApp, ui: &mut Ui, slide: usize, index: usize, c: 
             // frame until it stuck at its widest (#1431).
             ui.horizontal(|ui| {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if ui.small_button("🗑").clicked() {
+                    if crate::dialogs::kit::icon_only(ui, crate::icons::Icon::DeleteComment, "Delete Comment", true).clicked() {
                         let _ = app.run("slide.go", json!({"index": slide}));
                         let _ = app.run("comment.delete", json!({"index": index}));
                         match app.ui.comment_focus {

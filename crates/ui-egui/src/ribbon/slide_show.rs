@@ -70,9 +70,5 @@ pub(super) fn record(app: &mut SlideApp, ui: &mut Ui) {
             }
         }
     });
-    group(ui, |ui| {
-        if big_button(ui, Icon::Help, "Learn\nMore", true).clicked() {
-            app.open_url(deckcraft_engine::links::APP_PAGE);
-        }
-    });
+    // Lusk Diapo : pas de bouton « En savoir plus » (il ouvrait la page web de DeckCraft).
 }

@@ -2229,3 +2229,53 @@ no presentation is open	Aucune présentation n'est ouverte
 no slide to preview	Aucune diapositive à prévisualiser
 animation preview plays the current slide	L'aperçu des animations joue la diapositive active
 not every presentation could be saved	Certaines présentations n'ont pas pu être enregistrées
+Choose a graphic	Choisir un graphique
+Items, one per line	Éléments, un par ligne
+A matrix shows the first four items.	Une matrice montre les quatre premiers éléments.
+You	Vous
+On the selected object, slide {0}	Sur l'objet sélectionné, diapositive {0}
+On slide {0}	Sur la diapositive {0}
+Everyone who opens the presentation can read the comment. Find it again in the Comments pane.	Toute personne qui ouvre la présentation peut lire le commentaire. Vous le retrouverez dans le volet Commentaires.
+Link to:	Lier à :
+Place in this presentation	Emplacement dans cette présentation
+Email address	Adresse de messagerie
+A click opens a new message to this address in the mail program.	Un clic ouvre un nouveau message à cette adresse dans le logiciel de messagerie.
+Web page or file	Page web ou fichier
+Type or paste a web address (https://…) or the path of a file. The link opens during the slide show.	Tapez ou collez une adresse web (https://…) ou le chemin d'un fichier. Le lien s'ouvre pendant le diaporama.
+ScreenTip	Info-bulle
+Shown when the pointer rests on the link.	S'affiche quand le pointeur s'arrête sur le lien.
+Include on slides	Afficher sur les diapositives
+Format:	Format :
+Fixed date:	Date fixe :
+empty = updates by itself	vide = automatique
+Footer text:	Texte du pied de page :
+Date on the left, footer in the middle, number on the right.	La date à gauche, le pied de page au milieu, le numéro à droite.
+Type the equation	Tapez l'équation
+Linear form: a^2+b^2=c^2 or x=(-b+-sqrt(b^2-4ac))/2a. ^ raises, sqrt gives √, pi gives π, <= gives ≤.	Forme linéaire : a^2+b^2=c^2 ou x=(-b+-sqrt(b^2-4ac))/2a. ^ met en exposant, sqrt donne √, pi donne π, <= donne ≤.
+The equation appears here	L'équation s'affiche ici
+No accessibility issues found	Aucun problème d'accessibilité
+People with disabilities should not have difficulty reading this document.	Les personnes en situation de handicap ne devraient pas avoir de difficulté à lire ce document.
+1 thing to check	1 point à vérifier
+{0} things to check	{0} points à vérifier
+Fixing them helps people who use a screen reader or see poorly.	Les corriger aide les personnes qui utilisent un lecteur d'écran ou qui voient mal.
+Issues	Problèmes
+The date changes to today each time the presentation is opened.	La date se met à jour à chaque ouverture de la présentation.
+The date stays as it is today.	La date reste celle d'aujourd'hui.
+Month and day names are written in English and in French; other languages show the date in figures and the time over 24 hours.	Les noms des mois et des jours sont écrits en français et en anglais ; les autres langues montrent la date en chiffres et l'heure sur 24 heures.
+Add Pictures… to start	Commencez par « Ajouter des images… »
+Album layout	Mise en page de l'album
+Click a synonym to put it in place of the word.	Cliquez sur un synonyme pour remplacer le mot.
+Click a synonym to look it up in turn.	Cliquez sur un synonyme pour chercher les siens.
+French synonyms: Dicollecte thesaurus (LGPL).	Synonymes français : dictionnaire des synonymes de Dicollecte (LGPL).
+Shows items of equal weight, one after the other.	Montre des éléments de même importance, l'un après l'autre.
+Shows steps that follow each other, left to right.	Montre des étapes qui se suivent, de gauche à droite.
+Shows steps that repeat in a loop.	Montre des étapes qui se répètent en boucle.
+Shows who or what comes under whom: the first line on top.	Montre qui dépend de qui : la première ligne en haut.
+Shows levels that build on each other, the first at the top.	Montre des niveaux qui s'appuient les uns sur les autres, le premier en haut.
+Shows four parts of a whole, in a 2 × 2 grid.	Montre quatre parties d'un tout, dans une grille de 2 × 2.
+Right-click the object › Edit Alt Text, then describe it in a sentence.	Clic droit sur l'objet › Modifier le texte de remplacement, puis décrivez-le en une phrase.
+Give the slide a title (a Title layout, or type in its title box); it is read first.	Donnez un titre à la diapositive (une disposition avec titre, ou tapez dans sa zone de titre) : il est lu en premier.
+Darken the text or lighten its background so it stands out.	Foncez le texte ou éclaircissez son arrière-plan pour qu'il ressorte.
+Mark the table's first row as a header row (Table Design › Header Row).	Faites de la première ligne du tableau une ligne d'en-tête (Création de tableau › Ligne d'en-tête).
+Use link text that says where it goes, not the bare address.	Utilisez un texte de lien qui dit où il mène, pas l'adresse brute.
+Select the object with Go to and correct it.	Sélectionnez l'objet avec Atteindre et corrigez-le.

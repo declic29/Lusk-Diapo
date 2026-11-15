@@ -110,6 +110,9 @@ pub fn field_text(kind: &str, lang: Option<&str>, now: DateTime) -> Option<Strin
     // English writes the weekday form day first too.
     let day_first = matches!(lang.as_str(), "en-gb" | "en-au" | "en-nz" | "en-ie" | "en-in");
     let named = |text: String| english.then_some(text);
+    if lang == "fr" || lang.starts_with("fr-") {
+        return french(kind, now, &short);
+    }
     match kind {
         "datetime" | "datetimeFigureOut" | "datetime1" => Some(short),
         "datetime2" if lang == "en-ie" => named(format!("{day} {d} {month} {y}")),
@@ -130,6 +133,34 @@ pub fn field_text(kind: &str, lang: Option<&str>, now: DateTime) -> Option<Strin
         "datetime13" => named(format!("{h12}:{mi:02}:{s:02} {ampm}")),
         _ => None,
     }
+}
+
+/// French names, as PowerPoint writes them in French (lower case, abbreviations with a dot).
+const MOIS: [&str; 12] = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const MOIS_COURT: [&str; 12] = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const JOURS: [&str; 7] = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"];
+
+/// The date and time formats in French: named months and days, the 24-hour clock.
+fn french(kind: &str, now: DateTime, short: &str) -> Option<String> {
+    let i = now.month.checked_sub(1)? as usize;
+    let (mois, court) = (MOIS.get(i)?, MOIS_COURT.get(i)?);
+    let jour = JOURS.get(now.weekday())?;
+    let (d, y, yy) = (now.day, now.year, now.year.rem_euclid(100));
+    let (h, mi, s) = (now.hour, now.minute, now.second);
+    Some(match kind {
+        "datetime" | "datetimeFigureOut" | "datetime1" => short.to_string(),
+        "datetime2" => format!("{jour} {d} {mois} {y}"),
+        "datetime3" => format!("{d} {mois} {y}"),
+        "datetime4" => format!("{d} {court} {y}"),
+        "datetime5" => format!("{d}-{court}-{yy:02}"),
+        "datetime6" => format!("{mois} {yy:02}"),
+        "datetime7" => format!("{court}-{yy:02}"),
+        "datetime8" => format!("{short} {h:02}:{mi:02}"),
+        "datetime9" => format!("{short} {h:02}:{mi:02}:{s:02}"),
+        "datetime10" | "datetime12" => format!("{h:02}:{mi:02}"),
+        "datetime11" | "datetime13" => format!("{h:02}:{mi:02}:{s:02}"),
+        _ => return None,
+    })
 }
 
 /// The short (numeric) date of language `lang` (lower case), US order unless the language is
@@ -157,6 +188,20 @@ mod tests {
     use super::*;
 
     const FRI: DateTime = DateTime { year: 2026, month: 10, day: 9, hour: 20, minute: 5, second: 7 };
+
+    #[test]
+    fn french_formats_name_months_and_days() {
+        let f = |k: &str| field_text(k, Some("fr-FR"), FRI);
+        assert_eq!(f("datetime1").as_deref(), Some("09/10/2026"));
+        assert_eq!(f("datetime2").as_deref(), Some("vendredi 9 octobre 2026"));
+        assert_eq!(f("datetime3").as_deref(), Some("9 octobre 2026"));
+        assert_eq!(f("datetime4").as_deref(), Some("9 oct. 2026"));
+        assert_eq!(f("datetime5").as_deref(), Some("9-oct.-26"));
+        assert_eq!(f("datetime6").as_deref(), Some("octobre 26"));
+        assert_eq!(f("datetime8").as_deref(), Some("09/10/2026 20:05"));
+        assert_eq!(f("datetime12").as_deref(), Some("20:05"));
+        assert_eq!(f("datetime13").as_deref(), Some("20:05:07"));
+    }
 
     #[test]
     fn english_formats_of_every_type() {
@@ -191,7 +236,7 @@ mod tests {
         assert_eq!(field_text("datetime10", Some("fr-FR"), FRI).as_deref(), Some("20:05"));
         // Month names in another language: not computed (the field keeps its saved text).
         assert_eq!(field_text("datetime2", Some("de-DE"), FRI), None);
-        assert_eq!(field_text("datetime12", Some("fr-FR"), FRI), None);
+        assert_eq!(field_text("datetime12", Some("fr-FR"), FRI).as_deref(), Some("20:05"));
         assert_eq!(field_text("datetime4", Some("en-GB"), FRI).as_deref(), Some("9 October 2026"));
         assert_eq!(field_text("datetime2", Some("en-GB"), FRI).as_deref(), Some("Friday, 9 October 2026"));
         assert_eq!(field_text("datetime4", Some("en-AU"), FRI).as_deref(), Some("9 October 2026"));

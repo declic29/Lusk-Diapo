@@ -107,6 +107,19 @@
     sont traduits (`i18n::tr_message`).
   Restent non lus (avec un message) : vidéos MPEG-4 Part 2/DivX, Motion JPEG, ProRes, VP8,
   H.263 (.3gp), WMV/WMA ; refusés : .avi, .mpg, .ac3, .ico, .avif, .heic.
+- 15 novembre 2026, **fenêtres repensées avec des icônes** (`dialogs/kit.rs` : titres de section
+  à icône, cartes, boutons à icône, tuiles de choix, aides) : Album photo (aperçu de l'image
+  tournée, schéma de la mise en page), SmartArt (vignettes dessinées et aperçu avec les éléments
+  tapés, `dialogs/smartart.rs`), Lien, Commentaire (avec l'auteur), En-tête et pied de page (schéma
+  de la diapositive), Date et heure (aperçu), Équation (symboles en un clic, aperçu), Vérificateur
+  d'accessibilité (résumé, conseil pour corriger chaque problème) : `dialogs/styled.rs`. Les
+  fenêtres sont ancrées par le haut et la rangée de boutons ne prend plus toute la hauteur (elles
+  étaient à moitié vides). Le bouton principal « Insert » s'affiche « Insérer ».
+  Dates en français : noms des mois et des jours (« vendredi 9 octobre 2026 »), heure sur 24 h,
+  français par défaut dans Date et heure. Onglet Enregistrement : plus de bouton « En savoir
+  plus ». Dictionnaire des synonymes : il n'avait qu'une petite liste anglaise ; il a maintenant le
+  dictionnaire des synonymes français de Dicollecte (LGPL, 36 000 mots, `licenses/thes_fr/`), qui
+  retrouve aussi les pluriels, féminins, élisions et quelques formes de verbes ; volet redessiné.
 
 ## À faire (dans l'ordre du cahier des charges)
 
