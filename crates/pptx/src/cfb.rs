@@ -30,6 +30,23 @@ fn u32_at(b: &[u8], at: usize) -> Option<u32> {
 /// Whether `bytes` is a compound file holding an encryption stream. Walks the directory through
 /// the FAT; when the structure can't be followed (truncated or malformed), falls back to scanning
 /// the bytes for the UTF-16LE stream names.
+/// Is this a PowerPoint 97-2003 presentation (.ppt, .pps, .pot): a compound file with a
+/// « PowerPoint Document » stream?
+pub(crate) fn is_legacy_ppt(bytes: &[u8]) -> bool {
+    if !bytes.starts_with(&SIGNATURE) || is_encrypted(bytes) {
+        return false;
+    }
+    match directory_names(bytes) {
+        Some(names) => names.iter().any(|n| n.eq_ignore_ascii_case("PowerPoint Document")),
+        None => contains_utf16(bytes, "PowerPoint Document"),
+    }
+}
+
+/// Does this file start like a compound file (the container of the Office 97-2003 formats)?
+pub(crate) fn is_compound(bytes: &[u8]) -> bool {
+    bytes.starts_with(&SIGNATURE)
+}
+
 pub(crate) fn is_encrypted(bytes: &[u8]) -> bool {
     if !bytes.starts_with(&SIGNATURE) {
         return false;
@@ -150,6 +167,10 @@ mod tests {
         assert!(is_encrypted(&b));
         // A PowerPoint 97-2003 .ppt is a compound file too, without the encryption streams.
         assert!(!is_encrypted(&build(&["PowerPoint Document", "Current User"])));
+        assert!(is_legacy_ppt(&build(&["PowerPoint Document", "Current User"])));
+        assert!(!is_legacy_ppt(&b), "an encrypted .pptx is not a .ppt");
+        assert!(!is_legacy_ppt(&build(&["WordDocument"])), "a Word 97-2003 file is not a .ppt");
+        assert!(!is_legacy_ppt(b"PK\x03\x04"));
         assert!(!is_encrypted(b"PK\x03\x04"));
     }
 

@@ -42,7 +42,7 @@ pub(super) fn save_prompt(ui: &mut Ui, names: &[String]) -> Option<Choice> {
             } else {
                 crate::i18n::trf("{0} presentations have unsaved changes.", &[&names.len()])
             };
-            ui.add(egui::Label::new(egui::RichText::new(question).size(13.0).color(t.text_dim)).wrap());
+            ui.add(egui::Label::new(egui::RichText::new(question).size(13.0).line_height(Some(18.0)).color(t.text_dim)).wrap());
         });
     });
     ui.add_space(12.0);

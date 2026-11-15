@@ -101,6 +101,11 @@ fn i18n_shots() {
             app.dialog = Some(crate::dialogs::Dialog::new("quit"));
         });
     }
+    if want("dialogue-ppt") {
+        shoot(&dir, "dialogue-ppt", |app| {
+            app.notify(format!("C:\\Documents\\Bilan 2004.ppt{}", deckcraft_engine::cmd::file::LEGACY_PPT));
+        });
+    }
     if want("palette") {
         shoot(&dir, "palette", |app| app.palette = Some(("police".into(), 0)));
     }

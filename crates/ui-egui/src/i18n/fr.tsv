@@ -2284,3 +2284,12 @@ Some changes haven't been saved.	Des modifications n'ont pas été enregistrées
 {0} presentations have unsaved changes.	{0} présentations ne sont pas enregistrées.
 Not saved	Non enregistré
 and {0} more	et {0} autres
+Old PowerPoint 97-2003 format	Ancien format PowerPoint 97-2003
+Lusk Diapo can't open .ppt files. Convert this one to .pptx, then open the copy.	Lusk Diapo ne sait pas ouvrir les fichiers .ppt. Convertissez celui-ci en .pptx, puis ouvrez la copie.
+Lusk Diapo can't open « {0} ». Convert it to .pptx, then open the copy.	Lusk Diapo ne sait pas ouvrir « {0} ». Convertissez-le en .pptx, puis ouvrez la copie.
+With LibreOffice Impress (free)	Avec LibreOffice Impress (gratuit)
+Open the file, then File › Save As, type « PowerPoint 2007-365 (.pptx) ».	Ouvrez le fichier, puis Fichier › Enregistrer sous, type « PowerPoint 2007-365 (.pptx) ».
+With PowerPoint	Avec PowerPoint
+Open the file, then File › Save As, type « PowerPoint Presentation (*.pptx) ».	Ouvrez le fichier, puis Fichier › Enregistrer sous, type « Présentation PowerPoint (*.pptx) ».
+The original .ppt file is kept: the conversion makes a new .pptx file next to it.	Le fichier .ppt d'origine est conservé : la conversion crée un nouveau fichier .pptx à côté.
+Download LibreOffice	Télécharger LibreOffice

@@ -756,3 +756,39 @@ fn every_side_menu_label_fits_its_row_in_french() {
     }
     crate::i18n::set_french_on_this_thread(None);
 }
+
+/// Lusk Diapo : un fichier PowerPoint 97-2003 (.ppt) ouvre une fenêtre qui explique comment le
+/// convertir en .pptx, au lieu d'un message bref.
+#[test]
+fn an_old_ppt_file_explains_how_to_convert_it() {
+    let dir = temp_dir("legacy-ppt");
+    let path = dir.join("Ancien.ppt");
+    let mut bytes = vec![0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1];
+    bytes.resize(2048, 0);
+    std::fs::write(&path, bytes).unwrap();
+    let picked = path.to_string_lossy().to_string();
+    let services = Services { pick_open: Some(Box::new(move |_: &str| Some(picked.clone()))), ..Default::default() };
+    let mut h = harness(SlideApp::new(Session::new(), services));
+    h.state_mut().run("app.backstage", json!({"page": "open"})).unwrap();
+    h.run_steps(2);
+    h.get_by_label("Browse").click();
+    h.run_steps(3);
+    for _ in 0..500 {
+        if h.state().opening.is_none() {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        h.run_steps(1);
+    }
+    h.run_steps(3);
+    assert!(h.state().session.documents().is_empty());
+    let d = h.state().dialog.as_ref().expect("the conversion window is open");
+    assert_eq!(d.id, "legacyPpt");
+    assert_eq!(d.fields.get("name").map(String::as_str), Some("Ancien.ppt"));
+    assert!(h.query_by_label_contains("Download LibreOffice").is_some());
+    assert!(h.state().toast.is_none(), "no short message on top of the window");
+    h.get_by_label("OK").click();
+    h.run_steps(2);
+    assert!(h.state().dialog.is_none());
+    let _ = std::fs::remove_dir_all(&dir);
+}

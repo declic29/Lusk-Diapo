@@ -182,7 +182,7 @@ pub(crate) fn hint(ui: &mut Ui, text: &str) {
     ui.horizontal_top(|ui| {
         let (r, _) = ui.allocate_exact_size(vec2(16.0, 16.0), Sense::hover());
         icons::paint(ui.painter(), r.shrink(1.0), Icon::Info, t.text_faint, false);
-        ui.add(egui::Label::new(egui::RichText::new(crate::i18n::tr(text)).size(11.5).color(t.text_dim)).wrap());
+        ui.add(egui::Label::new(egui::RichText::new(crate::i18n::tr(text)).size(11.5).line_height(Some(16.0)).color(t.text_dim)).wrap());
     });
 }
 

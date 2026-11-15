@@ -31,6 +31,7 @@ pub(super) fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         "setupShow" => dlg_setup_show(app, ui, d),
         "quit" => dlg_quit(app, ui, d),
         "close" => dlg_close(app, ui, d),
+        "legacyPpt" => super::legacy_ppt::legacy_ppt_dialog(app, ui, d),
         "zoom" => zoom_dialog(app, ui, d),
         "comment" => super::styled::comment_dialog(app, ui, d),
         "bullets" => dlg_bullets(app, ui, d),

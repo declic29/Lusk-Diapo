@@ -59,6 +59,17 @@ pub fn is_encrypted(bytes: &[u8]) -> bool {
     cfb::is_encrypted(bytes)
 }
 
+/// Is this a PowerPoint 97-2003 presentation (`.ppt`, `.pps`, `.pot`)? Lusk Diapo can't read
+/// that old binary format; it says how to convert the file to `.pptx` instead.
+pub fn is_legacy_ppt(bytes: &[u8]) -> bool {
+    cfb::is_legacy_ppt(bytes)
+}
+
+/// Does this file start like an Office 97-2003 compound file?
+pub fn is_compound(bytes: &[u8]) -> bool {
+    cfb::is_compound(bytes)
+}
+
 /// Read a `.pptx` / `.potx` / `.ppsx` package.
 pub fn import(bytes: &[u8]) -> Result<Presentation, PptxError> {
     read::import(bytes)

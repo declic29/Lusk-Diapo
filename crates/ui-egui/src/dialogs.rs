@@ -71,6 +71,7 @@ fn title(id: &str) -> &'static str {
         "bullets" => "Bullets and Numbering",
         "action" => "Action Settings",
         "quit" => "Lusk Diapo",
+        "legacyPpt" => "Lusk Diapo",
         "themeColors" => "Create New Theme Colors",
         "themeFonts" => "Create New Theme Fonts",
         _ => "Lusk Diapo",
@@ -92,7 +93,7 @@ pub fn show(app: &mut SlideApp, ctx: &egui::Context) {
         .anchor(Align2::CENTER_TOP, vec2(0.0, 110.0))
         .open(&mut open);
     // Lusk Diapo : « Enregistrer les modifications ? » porte son propre titre, sans barre de titre.
-    if matches!(d.id.as_str(), "close" | "quit") {
+    if matches!(d.id.as_str(), "close" | "quit" | "legacyPpt") {
         window = window.title_bar(false);
     }
     // Two columns of colour rows plus Save must fit the first frame (Theme Colors), as must Save
@@ -232,6 +233,7 @@ mod grid_options;
 mod hyperlink;
 pub(crate) mod kit;
 mod language;
+mod legacy_ppt;
 mod paragraph;
 mod photo_album;
 mod preferences;

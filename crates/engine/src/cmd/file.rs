@@ -169,6 +169,12 @@ fn open_other(name: &str, bytes: &[u8]) -> Result<(Presentation, Vec<String>)> {
         return Err(EngineError::Other(format!("{name} is password-protected. Lusk Diapo can't open password-protected presentations yet.")));
     }
     let lower = name.to_ascii_lowercase();
+    // Lusk Diapo : l'ancien format binaire de PowerPoint 97-2003 n'est pas lu ; l'interface
+    // reconnaît ce message et explique comment convertir le fichier en .pptx.
+    let old_ext = [".ppt", ".pps", ".pot"].iter().any(|e| lower.ends_with(e));
+    if deckcraft_pptx::is_legacy_ppt(bytes) || (old_ext && deckcraft_pptx::is_compound(bytes)) {
+        return Err(EngineError::Other(format!("{name}{LEGACY_PPT}")));
+    }
     let rtf = deckcraft_format::rtf::sniff_rtf(bytes);
     if rtf || lower.ends_with(".txt") || lower.ends_with(".md") {
         let text = String::from_utf8_lossy(bytes);
@@ -439,6 +445,10 @@ pub fn pdf_bytes(doc: &Presentation, p: &Value) -> Result<Vec<u8>> {
 }
 
 /// The output extensions [`format_for_path`] maps to a writer of that format.
+/// The end of the error for a PowerPoint 97-2003 file, after its name: the interface spots it and
+/// shows how to convert the file.
+pub const LEGACY_PPT: &str = " is a PowerPoint 97-2003 presentation (.ppt). Lusk Diapo opens .pptx files: convert it first.";
+
 pub const WRITABLE_EXTENSIONS: &[&str] = &["deckcraft", "pptx", "potx", "ppsx", "pdf", "png", "jpg", "jpeg", "gif", "txt", "md", "rtf"];
 
 /// The format a file named `path` is written in, or `None` when its extension names no format

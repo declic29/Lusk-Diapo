@@ -128,9 +128,13 @@ impl SlideApp {
     }
 
     pub fn set_status(&mut self, msg: impl Into<String>) {
+        let msg = msg.into();
+        if self.legacy_ppt(&msg) {
+            return;
+        }
         // Un message fixe a sa traduction dans la table ; ceux du moteur qui portent des valeurs
         // suivent les modèles de `i18n::tr_message` ; les autres passent par `i18n::trf`.
-        self.status = Some((crate::i18n::tr_message(&msg.into()), now_ms()));
+        self.status = Some((crate::i18n::tr_message(&msg), now_ms()));
     }
 
     /// Turn on the automatic check for a newer release at start-up (desktop shell only; tests and
@@ -151,7 +155,11 @@ impl SlideApp {
     /// A message that must be seen wherever the user is: a toast, which also shows over the start
     /// screen and the File tab, where there is no status bar.
     pub fn notify(&mut self, msg: impl Into<String>) {
-        self.toast = Some(toast::Toast { text: msg.into(), at: now_ms() });
+        let msg = msg.into();
+        if self.legacy_ppt(&msg) {
+            return;
+        }
+        self.toast = Some(toast::Toast { text: msg, at: now_ms() });
     }
 
     /// The transient status message while it is fresh; clears it once stale. Both the status bar
@@ -374,6 +382,18 @@ impl SlideApp {
         doc_window::show(self, &ctx);
         self.perf.frame_ms = now_ms() - t0;
         self.ui_end(&ctx);
+    }
+
+    /// Lusk Diapo : une présentation PowerPoint 97-2003 (.ppt) n'a pas pu être ouverte. Au lieu
+    /// d'un message bref, une fenêtre explique comment la convertir en .pptx.
+    fn legacy_ppt(&mut self, msg: &str) -> bool {
+        let Some(at) = msg.find(deckcraft_engine::cmd::file::LEGACY_PPT) else { return false };
+        let path = &msg[..at];
+        let name = path.rsplit(['/', '\\']).next().unwrap_or(path);
+        let mut d = dialogs::Dialog::new("legacyPpt");
+        d.fields.insert("name".into(), name.to_string());
+        self.dialog = Some(d);
+        true
     }
 
     pub fn open_url(&mut self, url: &str) {
