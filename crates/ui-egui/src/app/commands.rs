@@ -213,7 +213,7 @@ impl SlideApp {
                     None => backstage::Page::Home,
                 };
                 if page.needs_doc() && self.session.active().is_none() {
-                    return Err(format!("File › {} needs an open presentation", page.label()));
+                    return Err(crate::i18n::trf("File › {0} needs an open presentation", &[&crate::i18n::tr(page.label())]));
                 }
                 self.open_backstage(page);
                 return Ok(json!({"page": page.id()}));

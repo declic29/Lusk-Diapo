@@ -53,7 +53,8 @@ pub(super) fn animation(app: &mut SlideApp, ui: &mut Ui) {
         if a.start == AnimStart::OnClick {
             click += 1;
         }
-        let name = names.iter().find(|(id, _)| *id == a.shape.0).map(|(_, n)| n.clone()).unwrap_or_else(|| format!("Shape {}", a.shape));
+        let name =
+            names.iter().find(|(id, _)| *id == a.shape.0).map(|(_, n)| n.clone()).unwrap_or_else(|| crate::i18n::trf("Shape {0}", &[&a.shape]));
         let (r, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 30.0), Sense::click());
         let sel = selected.contains(&a.shape.0);
         if sel || resp.hovered() {
@@ -94,9 +95,9 @@ pub(super) fn animation(app: &mut SlideApp, ui: &mut Ui) {
             );
             let edge = Rect::from_min_max(pos2(bar.max.x - 3.0, bar.min.y - 3.0), pos2(bar.max.x + 4.0, bar.max.y + 3.0));
             let body_resp = ui.interact(bar, ui.scope_id().with(("anim_bar", i)), Sense::drag()).on_hover_text(animtimeline::label(b));
-            body_resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Unknown, true, format!("Timing bar {}", i + 1)));
+            body_resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Unknown, true, crate::i18n::trf("Timing bar {0}", &[&(i + 1)])));
             let edge_resp = ui.interact(edge, ui.scope_id().with(("anim_edge", i)), Sense::drag());
-            edge_resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Unknown, true, format!("Duration handle {}", i + 1)));
+            edge_resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Unknown, true, crate::i18n::trf("Duration handle {0}", &[&(i + 1)])));
             if edge_resp.hovered() || edge_resp.dragged() {
                 ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
             } else if body_resp.hovered() || body_resp.dragged() {

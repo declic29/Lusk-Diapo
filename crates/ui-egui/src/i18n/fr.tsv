@@ -2141,3 +2141,91 @@ Restart to Update	Redémarrer pour mettre à jour
 Save and Update	Enregistrer et mettre à jour
 Do you want to save the changes you made to {0}?	Voulez-vous enregistrer les modifications apportées à {0} ?
 {0} presentations	{0} présentations
+{0} — this file can't be found	{0} — ce fichier est introuvable
+No recent presentations match “{0}”.	Aucune présentation récente ne correspond à « {0} ».
+No themes or templates match “{0}”.	Aucun thème ni modèle ne correspond à « {0} ».
+{0} (click to change)	{0} (cliquer pour changer)
+“{0}” is not available yet.	« {0} » n'est pas encore disponible.
+Width ({0}):	Largeur ({0}) :
+Height ({0}):	Hauteur ({0}) :
+“{0}” isn't used explicitly.	« {0} » n'est utilisée nulle part explicitement.
+Replaced “{0}” with “{1}”.	« {0} » a été remplacée par « {1} ».
+{0} ({1} slides)	{0} ({1} diapositives)
+No {0} dictionary is installed, so only common misspellings are found. Put a Hunspell .aff/.dic pair in {1}.	Aucun dictionnaire {0} n'est installé : seules les fautes courantes sont repérées. Placez une paire Hunspell .aff/.dic dans {1}.
+a dictionaries folder	un dossier de dictionnaires
+Width: enter {0} to {1} pixels	Largeur : saisissez une valeur de {0} à {1} pixels
+Seconds per slide: enter {0} to {1}	Secondes par diapositive : saisissez une valeur de {0} à {1}
+Slides: choose a range from 1 to {0}	Diapositives : choisissez une plage de 1 à {0}
+Replaced {0} occurrence(s).	{0} occurrence(s) remplacée(s).
+Lusk Diapo can't find “{0}”.	Lusk Diapo ne trouve pas « {0} ».
+Match {0} of {1} on slide {2}{3}.	Résultat {0} sur {1}, diapositive {2}{3}.
+Rotation {0}°, brightness {1}, contrast {2}	Rotation {0}°, luminosité {1}, contraste {2}
+{0} must be a number	{0} doit être un nombre
+Clear the tab at {0}	Effacer la tabulation à {0}
+{0} hex	{0} (hexadécimal)
+{0} needs a colour like #RRGGBB.	{0} : indiquez une couleur au format #RRGGBB.
+{0}: reading the file stopped unexpectedly	{0} : la lecture du fichier s'est arrêtée de façon inattendue
+Opening {0}…	Ouverture de {0}…
+Reading the file: {0} s	Lecture du fichier : {0} s
+Shape {0}	Forme {0}
+Timing bar {0}	Barre de minutage {0}
+Duration handle {0}	Poignée de durée {0}
+Start: {0}s, End: {1}s	Début : {0} s, fin : {1} s
+Compared with {0}	Comparée avec {0}
+Accept All ({0})	Tout accepter ({0})
+Reject All ({0})	Tout refuser ({0})
+Slide inserted after {0}	Diapositive insérée après la {0}
+Slide {0} deleted	Diapositive {0} supprimée
+Slide {0} changed	Diapositive {0} modifiée
+Slide {0}	Diapositive {0}
+{0} pt soft edges	Bords adoucis {0} pt
+Gradient stop {0}	Point de dégradé {0}
+No synonyms for “{0}”.	Aucun synonyme pour « {0} ».
+Insert this word	Insérer ce mot
+First {0} slides	Les {0} premières diapositives
+Go to slide {0}	Aller à la diapositive {0}
+Slide {0}   Total {1}	Diapositive {0}   Total {1}
+On Click of {0}	Au clic sur {0}
+{0} pt glow	Lumière {0} pt
+{0}  Bullet	{0}  Puce
+{0} Columns	{0} colonnes
+1 Column	1 colonne
+Action Button: {0}	Bouton d'action : {0}
+WordArt style {0}	Style WordArt {0}
+Slides Per\nPage: {0}	Diapositives\npar page : {0}
+1 Slide	1 diapositive
+{0} Slides	{0} diapositives
+Brightness {0}%	Luminosité {0} %
+Contrast {0}%	Contraste {0} %
+Saturation {0}%	Saturation {0} %
+Compressed {0} picture(s): {1} KB → {2} KB	{0} image(s) compressée(s) : {1} Ko → {2} Ko
+Align text to the top of the cell	Aligner le texte en haut de la cellule
+Align text to the center of the cell	Centrer le texte verticalement dans la cellule
+Align text to the bottom of the cell	Aligner le texte en bas de la cellule
+Increase {0}	Augmenter : {0}
+Decrease {0}	Diminuer : {0}
+No sound: {0}	Pas de son : {0}
+{0} isn't installed on this computer. Text that uses it is shown in a similar font.	{0} n'est pas installée sur cet ordinateur. Le texte qui l'utilise s'affiche dans une police proche.
+{0} aren't installed on this computer. Text that uses them is shown in a similar font.	{0} ne sont pas installées sur cet ordinateur. Le texte qui les utilise s'affiche dans une police proche.
+{0} and {1}	{0} et {1}
+{0}, {1} and {2}	{0}, {1} et {2}
+{0}, {1}, {2} and {3} more	{0}, {1}, {2} et {3} autres
+the pasted image is too large	L'image collée est trop grande
+the pasted image is empty	L'image collée est vide
+the pasted image is {0}×{1} pixels; the limit is 16 megapixels	L'image collée fait {0}×{1} pixels ; la limite est de 16 mégapixels
+{0}: Lusk Diapo can't open this kind of file	{0} : Lusk Diapo ne sait pas ouvrir ce type de fichier
+Couldn't save {0}: {1}	Impossible d'enregistrer {0} : {1}
+{0} was not applied: the presentation it was chosen for is closed	{0} n'a pas été appliqué : la présentation pour laquelle il a été choisi est fermée
+{0} was not applied: {1}	{0} n'a pas été appliqué : {1}
+the slide it was chosen for was deleted	la diapositive pour laquelle il a été choisi a été supprimée
+the slide master it was chosen for was deleted	le masque pour lequel il a été choisi a été supprimé
+the layout it was chosen for was deleted	la disposition pour laquelle il a été choisi a été supprimée
+there was no slide to put it on	il n'y avait aucune diapositive où le placer
+File › {0} needs an open presentation	Fichier › {0} demande une présentation ouverte
+nothing to print: no presentation is open	Rien à imprimer : aucune présentation n'est ouverte
+open a presentation first	Ouvrez d'abord une présentation
+open the presentation to compare first	Ouvrez d'abord la présentation à comparer
+no presentation is open	Aucune présentation n'est ouverte
+no slide to preview	Aucune diapositive à prévisualiser
+animation preview plays the current slide	L'aperçu des animations joue la diapositive active
+not every presentation could be saved	Certaines présentations n'ont pas pu être enregistrées

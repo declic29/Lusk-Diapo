@@ -9,7 +9,7 @@ pub(super) fn revisions(app: &mut SlideApp, ui: &mut Ui) {
         return;
     };
     let changes = v["changes"].as_array().cloned().unwrap_or_default();
-    ui.label(egui::RichText::new(format!("Compared with {}", v["name"].as_str().unwrap_or("?"))).color(t.text_dim));
+    ui.label(egui::RichText::new(crate::i18n::trf("Compared with {0}", &[&v["name"].as_str().unwrap_or("?")])).color(t.text_dim));
     if v["byPosition"].as_bool() == Some(true) {
         ui.label(
             egui::RichText::new(crate::i18n::tr("Not a copy of this presentation: slides are matched by position.")).size(11.0).color(t.text_faint),
@@ -25,10 +25,10 @@ pub(super) fn revisions(app: &mut SlideApp, ui: &mut Ui) {
         return;
     }
     ui.horizontal(|ui| {
-        if ui.button(format!("Accept All ({})", changes.len())).clicked() {
+        if ui.button(crate::i18n::trf("Accept All ({0})", &[&changes.len()])).clicked() {
             run(app, "review.accept", json!({"all": true}));
         }
-        if ui.button(format!("Reject All ({})", changes.len())).clicked() {
+        if ui.button(crate::i18n::trf("Reject All ({0})", &[&changes.len()])).clicked() {
             run(app, "review.reject", json!({"all": true}));
         }
     });
@@ -36,9 +36,9 @@ pub(super) fn revisions(app: &mut SlideApp, ui: &mut Ui) {
     for (i, c) in changes.iter().enumerate() {
         let slide = c["slide"].as_u64().unwrap_or(0);
         let (head, col) = match c["kind"].as_str().unwrap_or("") {
-            "inserted" => (format!("Slide inserted after {slide}"), Color32::from_rgb(0x2E, 0xA3, 0x6F)),
-            "deleted" => (format!("Slide {} deleted", slide.saturating_add(1)), Color32::from_rgb(0xD8, 0x3F, 0x6B)),
-            _ => (format!("Slide {} changed", slide.saturating_add(1)), Color32::from_rgb(0x2E, 0x6F, 0xD8)),
+            "inserted" => (crate::i18n::trf("Slide inserted after {0}", &[&slide]), Color32::from_rgb(0x2E, 0xA3, 0x6F)),
+            "deleted" => (crate::i18n::trf("Slide {0} deleted", &[&slide.saturating_add(1)]), Color32::from_rgb(0xD8, 0x3F, 0x6B)),
+            _ => (crate::i18n::trf("Slide {0} changed", &[&slide.saturating_add(1)]), Color32::from_rgb(0x2E, 0x6F, 0xD8)),
         };
         egui::Frame::NONE.fill(t.chrome).corner_radius(CornerRadius::same(6)).inner_margin(egui::Margin::same(8)).show(ui, |ui| {
             ui.set_width(ui.available_width());
@@ -83,7 +83,7 @@ pub(super) fn comments(app: &mut SlideApp, ui: &mut Ui) {
     }
     let focus = app.ui.comment_focus;
     for (si, list) in threads {
-        ui.label(egui::RichText::new(format!("Slide {}", si + 1)).font(theme::bold(12.0)).color(t.text_dim));
+        ui.label(egui::RichText::new(crate::i18n::trf("Slide {0}", &[&(si + 1)])).font(theme::bold(12.0)).color(t.text_dim));
         ui.add_space(2.0);
         for (i, c) in list.iter().enumerate() {
             comment_card(app, ui, si, i, c, focus == Some((si, i)));
@@ -146,7 +146,7 @@ fn comment_card(app: &mut SlideApp, ui: &mut Ui, slide: usize, index: usize, c: 
                             _ => {}
                         }
                     }
-                    if ui.small_button(if c.resolved { "Reopen" } else { "Resolve" }).clicked() {
+                    if ui.small_button(crate::i18n::tr(if c.resolved { "Reopen" } else { "Resolve" })).clicked() {
                         focus_comment(app, slide, index);
                         run(app, "comment.resolve", json!({"index": index, "resolved": !c.resolved}));
                     }

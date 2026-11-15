@@ -241,12 +241,12 @@ const MAX_PASTE_IMAGE_PIXELS: usize = 16_000_000;
 /// Encode an egui color image as the PNG bytes `insert.picture` stores.
 fn color_image_png(image: &egui::ColorImage) -> Result<Vec<u8>, String> {
     let [w, h] = image.size;
-    let pixels = w.checked_mul(h).ok_or_else(|| "the pasted image is too large".to_string())?;
+    let pixels = w.checked_mul(h).ok_or_else(|| crate::i18n::trs("the pasted image is too large"))?;
     if pixels == 0 {
-        return Err("the pasted image is empty".into());
+        return Err(crate::i18n::trs("the pasted image is empty"));
     }
     if pixels > MAX_PASTE_IMAGE_PIXELS {
-        return Err(format!("the pasted image is {w}×{h} pixels; the limit is 16 megapixels"));
+        return Err(crate::i18n::trf("the pasted image is {0}×{1} pixels; the limit is 16 megapixels", &[&w, &h]));
     }
     let rgba: Vec<u8> = image.pixels.iter().flat_map(|c| c.to_array()).collect();
     Ok(deckcraft_render::Image { width: w as u32, height: h as u32, pixels: rgba }.to_png())

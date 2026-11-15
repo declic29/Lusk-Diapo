@@ -133,17 +133,17 @@ fn reconcile_size_fields(d: &mut Dialog) {
 
 fn shown_points(d: &Dialog, key: &str, label: &str) -> Result<f64, String> {
     if edited(d, key) {
-        let n = parse_shown(&field_of(d, key)).ok_or_else(|| format!("{label} must be a number"))?;
+        let n = parse_shown(&field_of(d, key)).ok_or_else(|| crate::i18n::trf("{0} must be a number", &[&crate::i18n::tr(label)]))?;
         return Ok(n * 72.0);
     }
-    exact_of(d, key).ok_or_else(|| format!("{label} must be a number"))
+    exact_of(d, key).ok_or_else(|| crate::i18n::trf("{0} must be a number", &[&crate::i18n::tr(label)]))
 }
 
 fn shown_number(d: &Dialog, key: &str, label: &str) -> Result<f64, String> {
     if edited(d, key) {
-        return parse_shown(&field_of(d, key)).ok_or_else(|| format!("{label} must be a number"));
+        return parse_shown(&field_of(d, key)).ok_or_else(|| crate::i18n::trf("{0} must be a number", &[&crate::i18n::tr(label)]));
     }
-    exact_of(d, key).ok_or_else(|| format!("{label} must be a number"))
+    exact_of(d, key).ok_or_else(|| crate::i18n::trf("{0} must be a number", &[&crate::i18n::tr(label)]))
 }
 
 fn size_position_value(d: &Dialog) -> Result<Value, String> {

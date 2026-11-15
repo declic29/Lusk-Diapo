@@ -58,6 +58,12 @@
 - 14 novembre 2026 (soir, suite) : plus de page Fichier › Informations (Inspecter la
   présentation, Gérer la présentation, propriétés) : le menu Fichier va d'Ouvrir à Enregistrer.
   Le Vérificateur d'accessibilité reste dans l'onglet Révision.
+- 15 novembre 2026 : relecture de la traduction. Une soixantaine de textes construits avec
+  `format!` ou passés directement aux boutons restaient en anglais (volet Commentaires, volet
+  Sélection, miniatures, Rechercher, Exporter, album photo, mode Présentateur, minutage,
+  messages d'erreur…) : ils passent maintenant par `tr` / `trf`, avec 88 nouvelles lignes dans
+  `fr.tsv`. Reste en anglais : « Close window », le nom pour lecteur d'écran de la croix des
+  fenêtres, qui vient de la bibliothèque craft-ui.
 
 ## À faire (dans l'ordre du cahier des charges)
 

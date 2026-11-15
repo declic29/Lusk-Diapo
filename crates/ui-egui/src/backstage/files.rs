@@ -105,7 +105,7 @@ fn recent_list(app: &mut SlideApp, ui: &mut Ui, query: &str, limit: usize) {
     let list: Vec<String> =
         app.ui.recent.iter().filter(|p| q.is_empty() || split_path(p).0.to_lowercase().contains(&q)).take(limit).cloned().collect();
     if list.is_empty() {
-        dim(ui, &format!("No recent presentations match “{}”.", query.trim()));
+        dim(ui, &crate::i18n::trf("No recent presentations match “{0}”.", &[&query.trim()]));
         return;
     }
     let width = ui.available_width().min(CONTENT_W);
@@ -138,8 +138,11 @@ fn recent_list(app: &mut SlideApp, ui: &mut Ui, query: &str, limit: usize) {
                 );
             }
         }
-        let resp =
-            if missing { resp.on_hover_text(format!("{path} — this file can't be found")) } else { resp.on_hover_text(crate::i18n::trs(&path)) };
+        let resp = if missing {
+            resp.on_hover_text(crate::i18n::trf("{0} — this file can't be found", &[&path]))
+        } else {
+            resp.on_hover_text(crate::i18n::trs(&path))
+        };
         // Remove from the list: a real labelled widget on top of the row, with a code-drawn icon
         // (a text glyph would need a font that has it).
         let x = ui.allocate_rect(
@@ -270,7 +273,7 @@ pub(super) fn new_page(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
         false
     };
     if !themes && !templates {
-        dim(ui, &format!("No themes or templates match “{}”.", q.trim()));
+        dim(ui, &crate::i18n::trf("No themes or templates match “{0}”.", &[&q.trim()]));
     }
 }
 

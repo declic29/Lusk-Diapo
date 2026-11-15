@@ -38,7 +38,7 @@ pub(super) fn gif_options(app: &SlideApp, ui: &mut Ui, d: &mut Dialog) -> Result
     let width = if size == "custom" {
         let w = num(d, "gifWidth", 960.0).round();
         if !(f64::from(MIN_WIDTH)..=f64::from(MAX_WIDTH)).contains(&w) {
-            return Err(format!("Width: enter {MIN_WIDTH} to {MAX_WIDTH} pixels"));
+            return Err(crate::i18n::trf("Width: enter {0} to {1} pixels", &[&MIN_WIDTH, &MAX_WIDTH]));
         }
         json!(w as u32)
     } else {
@@ -46,12 +46,12 @@ pub(super) fn gif_options(app: &SlideApp, ui: &mut Ui, d: &mut Dialog) -> Result
     };
     let seconds = num(d, "gifSeconds", f64::NAN);
     if deckcraft_engine::gif_export::check_seconds(seconds).is_err() {
-        return Err(format!("Seconds per slide: enter {MIN_SECONDS} to {MAX_SECONDS}"));
+        return Err(crate::i18n::trf("Seconds per slide: enter {0} to {1}", &[&MIN_SECONDS, &MAX_SECONDS]));
     }
     let mut p = json!({"width": width, "secondsPerSlide": seconds, "loop": forever, "includeHidden": hidden});
     let (from, to) = (num(d, "gifFrom", 1.0).round(), num(d, "gifTo", n as f64).round());
     if !(from >= 1.0 && from <= to && to <= n as f64) {
-        return Err(format!("Slides: choose a range from 1 to {n}"));
+        return Err(crate::i18n::trf("Slides: choose a range from 1 to {0}", &[&n]));
     }
     if from > 1.0 || to < n as f64 {
         p["slides"] = json!(((from as usize - 1)..(to as usize)).collect::<Vec<_>>());

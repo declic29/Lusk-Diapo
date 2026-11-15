@@ -123,7 +123,7 @@ fn command_for(purpose: FilePurpose, name: &str, bytes: &[u8]) -> Result<&'stati
         FilePurpose::Open => open_command(name),
         FilePurpose::Infer => infer_command(name, bytes),
     };
-    cmd.ok_or_else(|| format!("{name}: Lusk Diapo can't open this kind of file"))
+    cmd.ok_or_else(|| crate::i18n::trf("{0}: Lusk Diapo can't open this kind of file", &[&name]))
 }
 
 impl SlideApp {
@@ -531,7 +531,7 @@ impl SlideApp {
         };
         let saved = save_bytes(&d.doc, format_for_path(&name)).map_err(|e| e.to_string()).and_then(|bytes| {
             let host = self.services.host_save.as_mut().ok_or("no page to save to")?;
-            host(&name, &bytes, save_as).map_err(|e| format!("Couldn't save {name}: {e}"))?;
+            host(&name, &bytes, save_as).map_err(|e| crate::i18n::trf("Couldn't save {0}: {1}", &[&name, &e]))?;
             mark_saved(&mut self.session, Some(name.clone())).map_err(|e| e.to_string())
         });
         match saved {
@@ -733,7 +733,7 @@ impl SlideApp {
             return self.session.execute(cmd, params).map(|_| ()).map_err(|e| e.to_string());
         };
         let Some(idx) = self.session.documents().iter().position(|d| d.uid == *doc) else {
-            return Err(format!("{name} was not applied: the presentation it was chosen for is closed"));
+            return Err(crate::i18n::trf("{0} was not applied: the presentation it was chosen for is closed", &[&name]));
         };
         let view = self.session.active_index();
         let saved = self.session.documents().get(idx).map(|d| d.selection.clone());
@@ -742,7 +742,7 @@ impl SlideApp {
             Ok(located) => located,
             Err(e) => {
                 self.restore_file_view(view);
-                return Err(format!("{name} was not applied: {e}"));
+                return Err(crate::i18n::trf("{0} was not applied: {1}", &[&name, &crate::i18n::tr(&e)]));
             }
         };
         if let Some(st) = self.session.active_mut() {

@@ -66,7 +66,7 @@ pub(super) fn body(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         "themeFonts" => theme_fonts_dialog(app, ui, d),
         "dateTime" => date_time_dialog(app, ui, d),
         _ => {
-            ui.label(format!("“{}” is not available yet.", d.id));
+            ui.label(crate::i18n::trf("“{0}” is not available yet.", &[&d.id]));
             let (ok, cancel) = buttons(ui, "OK");
             ok || cancel
         }
@@ -115,8 +115,8 @@ fn dlg_slide_size(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     let _ = combo.response.labelled_by(label.id);
     let abbr = unit_abbr(len);
     let (w_seed, h_seed) = (field_of(d, "w"), field_of(d, "h"));
-    field(ui, d, &format!("Width ({abbr}):"), "w", &w_seed);
-    field(ui, d, &format!("Height ({abbr}):"), "h", &h_seed);
+    field(ui, d, &crate::i18n::trf("Width ({0}):", &[&abbr]), "w", &w_seed);
+    field(ui, d, &crate::i18n::trf("Height ({0}):", &[&abbr]), "h", &h_seed);
     let (w, h) = (slide_dim_points(d, "w", ppu, cur.width), slide_dim_points(d, "h", ppu, cur.height));
     ui.horizontal(|ui| {
         ui.label(crate::i18n::tr("Orientation:"));
@@ -740,7 +740,7 @@ fn dlg_export(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
         ui.horizontal(|ui| {
             let field = ui.label(crate::i18n::tr("Print layout:"));
             let combo = craft_ui::ComboBox::from_id_salt("pdf_layout")
-                .selected_text(match pdf_layout.as_str() {
+                .selected_text(crate::i18n::tr(match pdf_layout.as_str() {
                     "notes" => "Notes Pages",
                     "h1" => "Handouts (1 slide per page)",
                     "h2" => "Handouts (2 slides per page)",
@@ -749,7 +749,7 @@ fn dlg_export(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
                     "h6" => "Handouts (6 slides per page)",
                     "h9" => "Handouts (9 slides per page)",
                     _ => "Full Page Slides",
-                })
+                }))
                 .show_ui(ui, |ui| {
                     for (k, l) in [
                         ("slides", "Full Page Slides"),
@@ -853,7 +853,11 @@ fn dlg_replace_fonts(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     let (ok, cancel) = buttons(ui, "Replace");
     if ok && !from.is_empty() && !to.trim().is_empty() {
         let n = app.run("font.replace", json!({"from": from, "to": to.trim()})).ok().and_then(|v| v["replaced"].as_u64()).unwrap_or(0);
-        let msg = if n == 0 { format!("“{from}” isn't used explicitly.") } else { format!("Replaced “{from}” with “{}”.", to.trim()) };
+        let msg = if n == 0 {
+            crate::i18n::trf("“{0}” isn't used explicitly.", &[&from])
+        } else {
+            crate::i18n::trf("Replaced “{0}” with “{1}”.", &[&from, &to.trim()])
+        };
         d.fields.insert("result".into(), msg);
         d.fields.remove("from");
         // Stay open, like PowerPoint, so several fonts can be replaced in a row.
@@ -945,14 +949,17 @@ fn dlg_spelling(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
             egui::RichText::new(crate::i18n::trf("Dictionary: {0}", &[&info.get("lang").and_then(Value::as_str).unwrap_or("")])).small().weak(),
         ),
         _ => ui.label(
-            egui::RichText::new(format!(
-                "No {} dictionary is installed, so only common misspellings are found. Put a Hunspell .aff/.dic pair in {}.",
-                info.get("lang").and_then(Value::as_str).unwrap_or("en-US"),
-                info.get("folders")
-                    .and_then(Value::as_array)
-                    .and_then(|a| a.get(1).or(a.first()))
-                    .and_then(Value::as_str)
-                    .unwrap_or("a dictionaries folder")
+            egui::RichText::new(crate::i18n::trf(
+                "No {0} dictionary is installed, so only common misspellings are found. Put a Hunspell .aff/.dic pair in {1}.",
+                &[
+                    &info.get("lang").and_then(Value::as_str).unwrap_or("en-US"),
+                    &info
+                        .get("folders")
+                        .and_then(Value::as_array)
+                        .and_then(|a| a.get(1).or(a.first()))
+                        .and_then(Value::as_str)
+                        .unwrap_or(crate::i18n::tr("a dictionaries folder")),
+                ],
             ))
             .small()
             .weak(),
@@ -1160,7 +1167,7 @@ fn dlg_custom_show(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bool {
     let mut started = false;
     for s in &shows {
         ui.horizontal(|ui| {
-            ui.label(format!("{} ({} slides)", s.name, s.slides.len()));
+            ui.label(crate::i18n::trf("{0} ({1} slides)", &[&s.name, &s.slides.len()]));
             if ui.small_button(crate::i18n::tr("Show")).clicked() {
                 run(app, "show.start", json!({"custom": s.name}));
                 started = true;

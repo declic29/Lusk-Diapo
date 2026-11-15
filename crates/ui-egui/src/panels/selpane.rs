@@ -239,7 +239,7 @@ pub fn show(app: &mut SlideApp, ui: &mut Ui) {
         icons::paint(&painter, eye, if row.hidden { Icon::EyeOff } else { Icon::Eye }, ink, false);
         icons::paint(&painter, lock, if row.locked { Icon::Lock } else { Icon::Unlock }, ink, false);
         let eye_resp = ui.interact(eye.expand(3.0), ui.scope_id().with(("eye", row.id)), Sense::click());
-        let eye_label = format!("{} {}", if row.hidden { "Show" } else { "Hide" }, row.name);
+        let eye_label = format!("{} {}", crate::i18n::tr(if row.hidden { "Show" } else { "Hide" }), row.name);
         eye_resp.widget_info(|| WidgetInfo::labeled(Role::Button, true, &eye_label));
         let lock_resp = ui.interact(lock.expand(3.0), ui.scope_id().with(("lock", row.id)), Sense::click());
         let lock_label = format!("{} {}", if row.locked { "Unlock" } else { "Lock" }, row.name);
@@ -406,11 +406,11 @@ fn context_menu(app: &mut SlideApp, resp: &egui::Response, row: &Row) {
             app.selpane.rename_started = false;
             ui.close();
         }
-        if ui.button(if row.hidden { "Show" } else { "Hide" }).clicked() {
+        if ui.button(crate::i18n::tr(if row.hidden { "Show" } else { "Hide" })).clicked() {
             run(app, "shape.visible", json!({"id": row.id, "visible": row.hidden}));
             ui.close();
         }
-        if ui.button(if row.locked { "Unlock" } else { "Lock" }).clicked() {
+        if ui.button(crate::i18n::tr(if row.locked { "Unlock" } else { "Lock" })).clicked() {
             run(app, "shape.lock", json!({"id": row.id}));
             ui.close();
         }

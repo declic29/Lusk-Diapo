@@ -226,7 +226,7 @@ fn shape_items(app: &mut SlideApp, ui: &mut egui::Ui) {
         crate::ribbon::menu_item(app, ui, crate::icons::Icon::Ungroup, "Ungroup", "arrange.ungroup", json!({}));
     });
     let locked = app.session.active().is_some_and(|d| d.selected_shapes().iter().all(|s| s.locked));
-    if ui.button(if locked { "Unlock" } else { "Lock" }).clicked() {
+    if ui.button(crate::i18n::tr(if locked { "Unlock" } else { "Lock" })).clicked() {
         let _ = app.run("shape.lock", json!({"locked": !locked}));
         ui.close();
     }

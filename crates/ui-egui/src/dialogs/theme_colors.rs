@@ -26,7 +26,7 @@ fn theme_color_row(ui: &mut Ui, d: &mut Dialog, slot: SchemeSlot) {
         let resp = ui.add(egui::TextEdit::singleline(&mut v).desired_width(84.0).id_salt(("theme-hex", key)));
         let shown = v.clone();
         resp.widget_info(move || {
-            let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, true, format!("{} hex", slot.label()));
+            let mut info = egui::WidgetInfo::labeled(egui::Role::TextInput, true, crate::i18n::trf("{0} hex", &[&crate::i18n::tr(slot.label())]));
             info.current_text_value = Some(shown.clone());
             info
         });
@@ -43,7 +43,7 @@ fn theme_color_payload(d: &mut Dialog) -> Result<Value, String> {
     for slot in SchemeSlot::THEME {
         let raw = d.get(slot.xml_name(), "");
         let Some(rgb) = deckcraft_color::Rgba::from_hex(raw.trim()) else {
-            return Err(format!("{} needs a colour like #RRGGBB.", slot.label()));
+            return Err(crate::i18n::trf("{0} needs a colour like #RRGGBB.", &[&crate::i18n::tr(slot.label())]));
         };
         colors.insert(slot.xml_name().into(), Value::String(format!("#{}", rgb.hex())));
     }

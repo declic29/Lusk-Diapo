@@ -689,7 +689,7 @@ fn draw_pen_and_hints(ui: &mut Ui, show: &mut Show, f: &Fr, painter: &egui::Pain
         painter.rect_filled(full, CornerRadius::ZERO, c);
     }
     if !show.goto.is_empty() {
-        let label = format!("Go to slide {}", show.goto);
+        let label = crate::i18n::trf("Go to slide {0}", &[&show.goto]);
         let w = (28.0 + label.len() as f32 * 10.0).clamp(160.0, full.width() - 32.0);
         let r = Rect::from_min_size(pos2(full.min.x + 16.0, full.max.y - 96.0), vec2(w, 36.0));
         painter.rect_filled(r, CornerRadius::same(6), Color32::from_black_alpha(190));
@@ -837,7 +837,10 @@ fn draw_extras(show: &mut Show, f: &Fr, painter: &egui::Painter, out: &mut Out) 
         painter.text(
             r.center(),
             Align2::CENTER_CENTER,
-            format!("Slide {:02}:{:04.1}   Total {:02}:{:02}", (t / 60.0) as u32, t % 60.0, (total / 60.0) as u32, (total % 60.0) as u32),
+            crate::i18n::trf(
+                "Slide {0}   Total {1}",
+                &[&format!("{:02}:{:04.1}", (t / 60.0) as u32, t % 60.0), &format!("{:02}:{:02}", (total / 60.0) as u32, (total % 60.0) as u32)],
+            ),
             theme::font(13.0),
             Color32::WHITE,
         );

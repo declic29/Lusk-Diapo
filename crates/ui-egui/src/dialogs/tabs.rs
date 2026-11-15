@@ -35,8 +35,9 @@ pub(super) fn tabs_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog) -> bo
         }
         for (i, (pos, align)) in stops.iter().enumerate() {
             ui.label(format!("{pos:.2}\""));
-            ui.label(TAB_KINDS.iter().find(|k| k.0 == align).map(|k| k.1).unwrap_or("Left"));
-            if ui.small_button(crate::i18n::tr("Clear")).on_hover_text(format!("Clear the tab at {pos:.2}\"")).clicked() {
+            ui.label(crate::i18n::tr(TAB_KINDS.iter().find(|k| k.0 == align).map(|k| k.1).unwrap_or("Left")));
+            if ui.small_button(crate::i18n::tr("Clear")).on_hover_text(crate::i18n::trf("Clear the tab at {0}", &[&format!("{pos:.2}\"")])).clicked()
+            {
                 remove = Some(i);
             }
             ui.end_row();

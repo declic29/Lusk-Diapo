@@ -193,7 +193,7 @@ fn list(app: &mut SlideApp, ui: &mut Ui) {
             });
         }
         let (row, resp) = ui.allocate_exact_size(vec2(width, th + 16.0), Sense::click_and_drag());
-        let label = format!("Slide {}", i + 1);
+        let label = crate::i18n::trf("Slide {0}", &[&(i + 1)]);
         resp.widget_info(|| WidgetInfo::labeled(Role::Button, true, &label));
         let img = crate::textures::device_pixel_rect(Rect::from_min_size(pos2(row.min.x + 30.0, row.min.y + 6.0), vec2(tw, th)), ppp);
         rects.push((i, row));
@@ -356,7 +356,7 @@ pub fn slide_menu(app: &mut SlideApp, ui: &mut Ui, i: usize) {
         ui.close();
     }
     let hidden = app.session.active().and_then(|d| d.doc.slides.get(i).map(|s| s.hidden)).unwrap_or(false);
-    if ui.button(if hidden { "Show Slide" } else { "Hide Slide" }).clicked() {
+    if ui.button(crate::i18n::tr(if hidden { "Show Slide" } else { "Hide Slide" })).clicked() {
         let _ = app.run("slide.hide", json!({"index": i}));
         ui.close();
     }

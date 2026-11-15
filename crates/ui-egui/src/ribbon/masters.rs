@@ -102,10 +102,16 @@ pub(super) fn notes_master(app: &mut SlideApp, ui: &mut Ui) {
 
 pub(super) fn handout_master(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
-        let r = big_button(ui, Icon::Layout, &format!("Slides Per\nPage: {}", app.ui.handout_per_page), true);
+        let r = big_button(ui, Icon::Layout, &crate::i18n::trf("Slides Per\nPage: {0}", &[&app.ui.handout_per_page]), true);
         egui::Popup::menu(&r).show(|ui| {
             for n in [1u8, 2, 3, 4, 6, 9] {
-                if ui.selectable_label(app.ui.handout_per_page == n, format!("{n} Slide{}", if n == 1 { "" } else { "s" })).clicked() {
+                if ui
+                    .selectable_label(
+                        app.ui.handout_per_page == n,
+                        if n == 1 { crate::i18n::trs("1 Slide") } else { crate::i18n::trf("{0} Slides", &[&n]) },
+                    )
+                    .clicked()
+                {
                     app.ui.handout_per_page = n;
                 }
             }

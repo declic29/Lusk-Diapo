@@ -290,7 +290,7 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                             run(app, "format.bullets", json!({"on": false}));
                         }
                         for ch in ["•", "○", "■", "□", "◆", "➢", "✓", "–", "★"] {
-                            if ui.button(egui::RichText::new(format!("{ch}  Bullet")).size(14.0)).clicked() {
+                            if ui.button(egui::RichText::new(crate::i18n::trf("{0}  Bullet", &[&ch])).size(14.0)).clicked() {
                                 run(app, "format.bullets", json!({"on": true, "char": ch}));
                             }
                         }
@@ -351,7 +351,7 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                 let r = icon_toggle(ui, Icon::Columns, "Columns", en, false);
                 egui::Popup::menu(&r).show(|ui| {
                     for n in 1..=3 {
-                        if ui.button(format!("{n} Column{}", if n > 1 { "s" } else { "" })).clicked() {
+                        if ui.button(if n > 1 { crate::i18n::trf("{0} Columns", &[&n]) } else { crate::i18n::trs("1 Column") }).clicked() {
                             run(app, "format.columns", json!({"count": n, "spacing": 18}));
                         }
                     }

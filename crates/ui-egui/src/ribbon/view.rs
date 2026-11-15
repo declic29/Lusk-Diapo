@@ -124,7 +124,7 @@ pub(super) fn zoom_menu(app: &mut SlideApp, ui: &mut Ui) {
             .collect()
     };
     if items.is_empty() {
-        ui.label(if kind == 1 { "The presentation has no sections. Add one with Home › Section." } else { "No slides." });
+        ui.label(crate::i18n::tr(if kind == 1 { "The presentation has no sections. Add one with Home › Section." } else { "No slides." }));
     }
     egui::ScrollArea::vertical().max_height(260.0).show(ui, |ui| {
         for (i, label) in items.iter().enumerate() {

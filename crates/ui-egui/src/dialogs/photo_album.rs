@@ -76,8 +76,8 @@ fn album_choice(ui: &mut Ui, d: &mut Dialog, id: &str, name: &str, key: &str, de
             }
         }
     });
-    let access = name.to_string();
-    let shown = label.to_string();
+    let access = crate::i18n::trs(name);
+    let shown = crate::i18n::trs(label);
     opened.response.widget_info(move || {
         let mut info = egui::WidgetInfo::labeled(egui::Role::ComboBox, true, access.clone());
         info.current_text_value = Some(shown.clone());
@@ -185,7 +185,7 @@ pub(super) fn photo_album_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog
                 }
             }
             if ui.button(crate::i18n::tr("New Text Box")).clicked() {
-                let text = d.get("boxText", "Text Box");
+                let text = d.get("boxText", crate::i18n::tr("Text Box"));
                 let text = text.trim();
                 if text.is_empty() {
                     app.set_status("Type the text for the new text box");
@@ -213,7 +213,7 @@ pub(super) fn photo_album_dialog(app: &mut SlideApp, ui: &mut Ui, d: &mut Dialog
                 d.fields.insert("sel".into(), next.to_string());
             }
         });
-        field(ui, d, "Text box:", "boxText", "Text Box");
+        field(ui, d, "Text box:", "boxText", crate::i18n::tr("Text Box"));
         let picture = selected_album_picture(d, &items);
         ui.label(album_picture_status(&items, sel));
         ui.horizontal_wrapped(|ui| {
@@ -327,7 +327,7 @@ fn album_picture_status(items: &[Value], sel: usize) -> String {
     let rot = item.get("rot").and_then(Value::as_f64).unwrap_or(0.0);
     let brightness = item.get("brightness").and_then(Value::as_f64).unwrap_or(0.0);
     let contrast = item.get("contrast").and_then(Value::as_f64).unwrap_or(0.0);
-    format!("Rotation {rot:.0}°, brightness {brightness:.1}, contrast {contrast:.1}")
+    crate::i18n::trf("Rotation {0}°, brightness {1}, contrast {2}", &[&format!("{rot:.0}"), &format!("{brightness:.1}"), &format!("{contrast:.1}")])
 }
 
 fn nudge_picture(d: &mut Dialog, key: &str, delta: f64) {

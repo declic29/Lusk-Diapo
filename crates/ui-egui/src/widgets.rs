@@ -555,9 +555,9 @@ pub fn spinner(ui: &mut Ui, id: &str, label: &str, value: f64, step: f64, suffix
         }
         let (rect, _) = ui.allocate_exact_size(vec2(12.0, 22.0), Sense::hover());
         let up = ui.interact(Rect::from_min_max(rect.min, pos2(rect.max.x, rect.center().y)), key.with("up"), Sense::click());
-        up.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, format!("Increase {label}")));
+        up.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, crate::i18n::trf("Increase {0}", &[&label])));
         let down = ui.interact(Rect::from_min_max(pos2(rect.min.x, rect.center().y), rect.max), key.with("dn"), Sense::click());
-        down.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, format!("Decrease {label}")));
+        down.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, crate::i18n::trf("Decrease {0}", &[&label])));
         let p = ui.painter();
         let c = rect.center();
         p.line_segment([pos2(c.x - 3.0, c.y - 3.0), pos2(c.x, c.y - 6.0)], Stroke::new(1.0, t.text_dim));
@@ -612,7 +612,7 @@ pub fn drop_button(ui: &mut Ui, label: &str, size: egui::Vec2, enabled: bool) ->
     let t = Tokens::get(ui.ctx());
     let r = ui
         .add_enabled(enabled, egui::Button::new(if label.is_empty() { String::new() } else { format!("{label}   ") }).min_size(size))
-        .on_hover_text(if label.is_empty() { "Options" } else { label });
+        .on_hover_text(if label.is_empty() { crate::i18n::tr("Options") } else { label });
     let col = if enabled { t.text_dim } else { t.text_faint };
     chevron(ui.painter(), egui::pos2(r.rect.max.x - 8.0, r.rect.center().y), 3.0, col);
     r

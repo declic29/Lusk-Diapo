@@ -328,7 +328,7 @@ pub(super) fn export(app: &mut SlideApp, ui: &mut Ui, bs: &mut Backstage) {
                         .selected_text(crate::i18n::trf("{0} slides per page", &[&bs.handouts_per_page]))
                         .show_ui(ui, |ui| {
                             for n in [1u8, 2, 3, 4, 6, 9] {
-                                if ui.selectable_label(bs.handouts_per_page == n, format!("{n} slides per page")).clicked() {
+                                if ui.selectable_label(bs.handouts_per_page == n, crate::i18n::trf("{0} slides per page", &[&n])).clicked() {
                                     bs.handouts_per_page = n;
                                 }
                             }

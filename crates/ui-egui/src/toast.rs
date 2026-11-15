@@ -20,12 +20,16 @@ pub fn missing_fonts_message(fonts: &[String]) -> Option<String> {
     let names = match fonts {
         [] => return None,
         [a] => a.clone(),
-        [a, b] => format!("{a} and {b}"),
-        [a, b, c] => format!("{a}, {b} and {c}"),
-        [a, b, c, rest @ ..] => format!("{a}, {b}, {c} and {} more", rest.len()),
+        [a, b] => crate::i18n::trf("{0} and {1}", &[a, b]),
+        [a, b, c] => crate::i18n::trf("{0}, {1} and {2}", &[a, b, c]),
+        [a, b, c, rest @ ..] => crate::i18n::trf("{0}, {1}, {2} and {3} more", &[a, b, c, &rest.len()]),
     };
-    let (it, them) = if fonts.len() == 1 { ("isn't", "it") } else { ("aren't", "them") };
-    Some(format!("{names} {it} installed on this computer. Text that uses {them} is shown in a similar font."))
+    let msg = if fonts.len() == 1 {
+        "{0} isn't installed on this computer. Text that uses it is shown in a similar font."
+    } else {
+        "{0} aren't installed on this computer. Text that uses them is shown in a similar font."
+    };
+    Some(crate::i18n::trf(msg, &[&names]))
 }
 
 /// Toast the active presentation's missing fonts, once per opened document.

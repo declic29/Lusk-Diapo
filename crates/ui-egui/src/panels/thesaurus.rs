@@ -16,14 +16,14 @@ pub(super) fn thesaurus(app: &mut SlideApp, ui: &mut Ui) {
         return;
     }
     if senses.is_empty() {
-        ui.label(egui::RichText::new(format!("No synonyms for \"{}\".", q.trim())).color(t.text_dim));
+        ui.label(egui::RichText::new(crate::i18n::trf("No synonyms for “{0}”.", &[&q.trim()])).color(t.text_dim));
         return;
     }
     let editing = app.session.active().is_some_and(|d| d.selection.text.is_some());
     for sense in senses {
         ui.label(egui::RichText::new(&sense.word).font(theme::bold(13.0)));
         for syn in sense.synonyms {
-            let r = ui.add(egui::Button::new(&syn).frame(false)).on_hover_text(if editing { "Insert" } else { "Look up" });
+            let r = ui.add(egui::Button::new(&syn).frame(false)).on_hover_text(crate::i18n::tr(if editing { "Insert this word" } else { "Look up" }));
             if r.clicked() {
                 if editing {
                     run(app, "review.replaceWord", json!({"with": syn}));

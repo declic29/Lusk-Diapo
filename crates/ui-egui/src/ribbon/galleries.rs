@@ -300,14 +300,14 @@ pub fn effects_menu(app: &mut SlideApp, ui: &mut Ui) {
             run(app, "shape.effects", json!({"glow": null}));
         }
         for r in [5.0, 8.0, 11.0, 18.0] {
-            if ui.button(format!("{r} pt glow")).clicked() {
+            if ui.button(crate::i18n::trf("{0} pt glow", &[&r])).clicked() {
                 run(app, "shape.effects", json!({"glow": r}));
             }
         }
     });
     ui.menu_button(crate::i18n::tr("Soft Edges"), |ui| {
         for r in [0.0, 1.0, 2.5, 5.0, 10.0, 25.0] {
-            if ui.button(if r == 0.0 { "No Soft Edges".to_string() } else { format!("{r} pt") }).clicked() {
+            if ui.button(if r == 0.0 { crate::i18n::trs("No Soft Edges") } else { format!("{r} pt") }).clicked() {
                 run(app, "shape.effects", json!({"softEdges": r}));
             }
         }

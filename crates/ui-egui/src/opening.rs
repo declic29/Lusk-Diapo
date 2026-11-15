@@ -80,7 +80,7 @@ impl SlideApp {
         let r = match o.rx.try_recv() {
             Ok(r) => r,
             Err(TryRecvError::Empty) => return,
-            Err(TryRecvError::Disconnected) => Err(format!("{}: reading the file stopped unexpectedly", o.path)),
+            Err(TryRecvError::Disconnected) => Err(crate::i18n::trf("{0}: reading the file stopped unexpectedly", &[&o.path])),
         };
         let Some(o) = self.opening.take() else { return };
         match r {
@@ -107,10 +107,10 @@ impl SlideApp {
             ui.set_width(320.0);
             ui.horizontal(|ui| {
                 ui.add(egui::Spinner::new().size(18.0));
-                ui.label(format!("Opening {name}…"));
+                ui.label(crate::i18n::trf("Opening {0}…", &[&name]));
             });
             ui.add_space(6.0);
-            ui.weak(format!("Reading the file: {secs:.0} s"));
+            ui.weak(crate::i18n::trf("Reading the file: {0} s", &[&format!("{secs:.0}")]));
             ui.add_space(6.0);
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 cancel = ui.button(crate::i18n::tr("Cancel")).clicked();

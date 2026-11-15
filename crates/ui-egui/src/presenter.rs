@@ -286,7 +286,7 @@ impl View {
             });
             egui::ScrollArea::vertical().show(right, |ui| {
                 ui.label(
-                    egui::RichText::new(if snapshot.notes.is_empty() { "No notes." } else { &snapshot.notes })
+                    egui::RichText::new(if snapshot.notes.is_empty() { crate::i18n::tr("No notes.") } else { &snapshot.notes })
                         .size(snapshot.notes_px.clamp(10.0, 72.0)),
                 );
             });
@@ -308,7 +308,7 @@ impl View {
         ui.heading(crate::i18n::tr("All slides"));
         ui.label(crate::i18n::tr("Choose a slide to show it, or press G to return."));
         if snapshot.total > crate::show::GRID_CAP {
-            ui.label(format!("First {} slides", crate::show::GRID_CAP));
+            ui.label(crate::i18n::trf("First {0} slides", &[&crate::show::GRID_CAP]));
         }
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {

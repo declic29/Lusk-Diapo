@@ -20,13 +20,13 @@ pub(super) fn picture_format(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::Corrections, "Corrections", true);
         egui::Popup::menu(&r).show(|ui| {
             for b in [-0.4, -0.2, 0.0, 0.2, 0.4] {
-                if ui.button(format!("Brightness {:+}%", (b * 100.0) as i32)).clicked() {
+                if ui.button(crate::i18n::trf("Brightness {0}%", &[&format!("{:+}", (b * 100.0) as i32)])).clicked() {
                     run(app, "picture.adjust", json!({"brightness": b}));
                 }
             }
             ui.separator();
             for c in [-0.4, -0.2, 0.0, 0.2, 0.4] {
-                if ui.button(format!("Contrast {:+}%", (c * 100.0) as i32)).clicked() {
+                if ui.button(crate::i18n::trf("Contrast {0}%", &[&format!("{:+}", (c * 100.0) as i32)])).clicked() {
                     run(app, "picture.adjust", json!({"contrast": c}));
                 }
             }
@@ -34,7 +34,7 @@ pub(super) fn picture_format(app: &mut SlideApp, ui: &mut Ui) {
         let r = big_button(ui, Icon::ColorAdjust, "Color", true);
         egui::Popup::menu(&r).show(|ui| {
             for s in [0.0, 0.33, 0.66, 1.0, 1.5, 2.0, 3.0] {
-                if ui.button(format!("Saturation {}%", (s * 100.0) as i32)).clicked() {
+                if ui.button(crate::i18n::trf("Saturation {0}%", &[&((s * 100.0) as i32)])).clicked() {
                     run(app, "picture.adjust", json!({"saturation": s}));
                 }
             }
@@ -316,7 +316,7 @@ fn compress_menu(app: &mut SlideApp, ui: &mut Ui) {
                 let kb = |v: &Value| v.as_u64().unwrap_or(0) / 1024;
                 let msg = match r["pictures"].as_u64().unwrap_or(0) {
                     0 => "Pictures are already at or below that resolution".to_string(),
-                    n => format!("Compressed {n} picture(s): {} KB → {} KB", kb(&r["before"]), kb(&r["after"])),
+                    n => crate::i18n::trf("Compressed {0} picture(s): {1} KB → {2} KB", &[&n, &kb(&r["before"]), &kb(&r["after"])]),
                 };
                 app.set_status(msg);
             }
