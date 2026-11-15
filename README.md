@@ -25,11 +25,15 @@ entièrement sur votre ordinateur : pas de compte, pas de publicité, pas de mes
 vos présentations ne sont jamais envoyées nulle part.
 
 - **Vos fichiers, dans les formats de tout le monde** : PowerPoint (.pptx, .potx, .ppsx), le
-  format propre de Lusk Diapo (.deckcraft) ; export PDF, images et vidéo.
-- **Un logiciel de présentation complet** : thèmes et dispositions, formes, images, tableaux,
-  graphiques, SmartArt, transitions et animations, vidéo et son, mode Présentateur avec notes et
-  minuteur.
-- **En français d'abord.**
+  format propre de Lusk Diapo (.deckcraft), plan en texte, Markdown et RTF ; export PDF, images,
+  GIF animé et vidéo. Les anciens fichiers PowerPoint 97-2003 (.ppt) s'ouvrent une fois convertis
+  en .pptx : Lusk Diapo explique comment le faire avec LibreOffice ou PowerPoint.
+- **Un logiciel de présentation complet** : thèmes, dispositions et idées de conception, formes,
+  images (y compris SVG, EMF et WMF), tableaux, graphiques, SmartArt, équations, album photo,
+  transitions et animations, vidéo et son, commentaires, vérificateur d'accessibilité, mode
+  Présentateur avec notes et minuteur.
+- **En français d'abord**, avec un dictionnaire des synonymes français (Dicollecte) et les dates
+  à la française.
 
 ## Télécharger et installer
 
