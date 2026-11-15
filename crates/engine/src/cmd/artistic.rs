@@ -130,6 +130,7 @@ pub fn apply(effect: &str, img: &RgbaImage) -> Option<RgbaImage> {
 /// Decodes `data`, applies `effect` and encodes a PNG.
 fn process(effect: &str, data: &[u8]) -> Result<Vec<u8>> {
     let img = image::load_from_memory(data).map_err(|_| bad("picture.artisticEffect", "this picture's format can't be processed"))?;
+    let img = deckcraft_render::orient_image(data, img);
     let img = if img.width().max(img.height()) > MAX_SIDE { img.thumbnail(MAX_SIDE, MAX_SIDE) } else { img };
     let out = apply(effect, &img.to_rgba8()).ok_or_else(|| bad("picture.artisticEffect", "unknown effect"))?;
     let mut png = Vec::new();

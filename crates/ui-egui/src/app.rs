@@ -128,9 +128,9 @@ impl SlideApp {
     }
 
     pub fn set_status(&mut self, msg: impl Into<String>) {
-        // Un message fixe a sa traduction dans la table ; les messages avec des valeurs passent
-        // par `i18n::trf` là où ils sont écrits.
-        self.status = Some((crate::i18n::trs(msg.into()), now_ms()));
+        // Un message fixe a sa traduction dans la table ; ceux du moteur qui portent des valeurs
+        // suivent les modèles de `i18n::tr_message` ; les autres passent par `i18n::trf`.
+        self.status = Some((crate::i18n::tr_message(&msg.into()), now_ms()));
     }
 
     /// Turn on the automatic check for a newer release at start-up (desktop shell only; tests and

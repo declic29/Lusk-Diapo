@@ -79,7 +79,9 @@ pub fn probe_headers(bytes: &Bytes) -> Result<MediaInfo> {
             .ok()
             .flatten()
             .ok_or_else(|| MediaError::Unsupported("this kind of media file".into()))?;
-        info.audio = Some(AudioInfo { codec: codec_label(&codec), sample_rate: rate, channels, decodable: true });
+        // Symphonia reads ALAC in MP4/M4A but not in CAF (it finds no decodable track there).
+        let decodable = !(c == Container::Caf && codec == "alac");
+        info.audio = Some(AudioInfo { codec: codec_label(&codec), sample_rate: rate, channels, decodable });
         if info.duration_ms == 0
             && let Some(n) = frames
             && rate > 0
@@ -116,10 +118,18 @@ fn probe_mp4(bytes: &Bytes) -> Result<MediaInfo> {
         let secs = if t.timescale > 0 { t.duration as f64 / t.timescale as f64 } else { 0.0 };
         if let Some(e) = t.entries.first() {
             let (w, h) = e.video.as_ref().map(|v| (v.width as u32, v.height as u32)).unwrap_or((t.width, t.height));
-            let decodable = matches!(e.codec, CodecConfig::Avc(_) | CodecConfig::Hevc(_) | CodecConfig::Vp9(_) | CodecConfig::Av1(_));
+            // Shown upright: a phone video filmed upright is stored sideways with a quarter turn.
+            let (w, h) = if t.display_rotation().unwrap_or(0) % 2 == 1 { (h, w) } else { (w, h) };
+            let decodable = match &e.codec {
+                CodecConfig::Avc(a) => crate::video::h264_supported(a.profile),
+                c => matches!(c, CodecConfig::Hevc(_) | CodecConfig::Vp9(_) | CodecConfig::Av1(_)),
+            };
             let frames = t.samples.len() as u64;
             info.video = Some(VideoInfo {
-                codec: codec_name(&e.codec),
+                codec: match &e.codec {
+                    CodecConfig::Avc(a) => crate::video::h264_name(a.profile),
+                    c => codec_name(c),
+                },
                 width: w,
                 height: h,
                 fps: if secs > 0.0 { frames as f64 / secs } else { 0.0 },
@@ -160,8 +170,15 @@ fn probe_mkv(bytes: &Bytes) -> Result<MediaInfo> {
             _ if dur > 0.0 => frames as f64 / dur,
             _ => 0.0,
         };
-        let decodable = matches!(t.codec, Codec::Avc { .. } | Codec::Hevc { .. } | Codec::Vp9 { .. } | Codec::Av1 { .. });
-        info.video = Some(VideoInfo { codec: mkv_codec_name(&t.codec), width: w, height: h, fps, frames, decodable });
+        let decodable = match &t.codec {
+            Codec::Avc { avcc } => crate::video::h264_supported(avcc.get(1).copied().unwrap_or(0)),
+            c => matches!(c, Codec::Hevc { .. } | Codec::Vp9 { .. } | Codec::Av1 { .. }),
+        };
+        let codec = match &t.codec {
+            Codec::Avc { avcc } => crate::video::h264_name(avcc.get(1).copied().unwrap_or(0)),
+            c => mkv_codec_name(c),
+        };
+        info.video = Some(VideoInfo { codec, width: w, height: h, fps, frames, decodable });
     }
     if let Some(t) = f.tracks.iter().find(|t| t.kind == TrackKind::Audio) {
         let (rate, channels) = t

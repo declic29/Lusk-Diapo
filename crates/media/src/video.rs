@@ -254,6 +254,9 @@ struct Track {
     width: u32,
     height: u32,
     codec: String,
+    /// Clockwise quarter turns to show the pictures upright (an MP4's `tkhd` matrix: a phone
+    /// video filmed upright is stored sideways with a 90° turn).
+    turns: u8,
 }
 
 enum Demux {
@@ -278,6 +281,9 @@ fn open_track(bytes: &[u8]) -> Result<(Demux, Track, Box<dyn Codec>)> {
             let t = &f.tracks[ti];
             let entry = t.entries.first().ok_or(MediaError::Missing("video track"))?;
             let codec: Box<dyn Codec> = match &entry.codec {
+                CodecConfig::Avc(a) if !h264_supported(a.profile) => {
+                    return Err(MediaError::Unsupported(format!("{} video", h264_name(a.profile))));
+                }
                 CodecConfig::Avc(a) => Box::new(H264::new(a.to_bytes())?),
                 CodecConfig::Hevc(c) => Box::new(Hevc::new(c.to_bytes())?),
                 CodecConfig::Vp9(_) => Box::new(Vp9 { dec: craft_video::vp9::decode::Decoder::new() }),
@@ -288,7 +294,8 @@ fn open_track(bytes: &[u8]) -> Result<(Demux, Track, Box<dyn Codec>)> {
             };
             let (w, h) = entry.video.as_ref().map(|v| (v.width as u32, v.height as u32)).unwrap_or((t.width, t.height));
             let samples = (0..t.samples.len()).map(|i| (t.presentation_pts(i).unwrap_or(0), t.samples[i].is_sync)).collect();
-            let track = Track { samples, timebase: (1, t.timescale.max(1) as i64), width: w, height: h, codec: codec_name(&entry.codec) };
+            let turns = t.display_rotation().unwrap_or(0);
+            let track = Track { samples, timebase: (1, t.timescale.max(1) as i64), width: w, height: h, codec: codec_name(&entry.codec), turns };
             Ok((Demux::Mp4(Box::new(f), ti), track, codec))
         }
         Container::Matroska => {
@@ -300,6 +307,9 @@ fn open_track(bytes: &[u8]) -> Result<(Demux, Track, Box<dyn Codec>)> {
                 .ok_or(MediaError::Missing("video track"))?;
             let t = &f.tracks[ti];
             let codec: Box<dyn Codec> = match &t.codec {
+                MkvCodec::Avc { avcc } if !h264_supported(avcc.get(1).copied().unwrap_or(0)) => {
+                    return Err(MediaError::Unsupported(format!("{} video", h264_name(avcc.get(1).copied().unwrap_or(0)))));
+                }
                 MkvCodec::Avc { avcc } => Box::new(H264::new(avcc.clone())?),
                 MkvCodec::Hevc { hvcc } => Box::new(Hevc::new(hvcc.clone())?),
                 MkvCodec::Vp9 { .. } => Box::new(Vp9 { dec: craft_video::vp9::decode::Decoder::new() }),
@@ -318,12 +328,52 @@ fn open_track(bytes: &[u8]) -> Result<(Demux, Track, Box<dyn Codec>)> {
                 width: w,
                 height: h,
                 codec: mkv_codec_name(&t.codec),
+                turns: 0,
             };
             Ok((Demux::Mkv(Box::new(f), ti), track, codec))
         }
         Container::Asf => Err(MediaError::Unsupported("Windows Media Video (WMV)".into())),
         _ => Err(MediaError::Missing("video track")),
     }
+}
+
+/// Whether our H.264 decoder reads this profile: 8-bit 4:2:0 (Baseline, Main, High, …), not
+/// High 10, High 4:2:2 or the 4:4:4 profiles (rare outside editing and screen recording).
+pub(crate) fn h264_supported(profile: u8) -> bool {
+    !matches!(profile, 110 | 122 | 244 | 44)
+}
+
+/// The H.264 codec name, with the profile when it is one we can't decode.
+pub(crate) fn h264_name(profile: u8) -> String {
+    match profile {
+        110 => "H.264 High 10 (10 bits)".into(),
+        122 => "H.264 4:2:2".into(),
+        244 | 44 => "H.264 4:4:4".into(),
+        _ => "H.264".into(),
+    }
+}
+
+/// `rgba` (`w` × `h`) turned `turns` quarter turns clockwise, with its new size.
+fn turn(rgba: Vec<u8>, w: u32, h: u32, turns: u8) -> (Vec<u8>, u32, u32) {
+    let turns = turns % 4;
+    if turns == 0 || rgba.len() != w as usize * h as usize * 4 {
+        return (rgba, w, h);
+    }
+    let (w, h) = (w as usize, h as usize);
+    let (nw, nh) = if turns == 2 { (w, h) } else { (h, w) };
+    let mut out = vec![0u8; rgba.len()];
+    for y in 0..h {
+        for x in 0..w {
+            let (nx, ny) = match turns {
+                1 => (h - 1 - y, x),
+                2 => (w - 1 - x, h - 1 - y),
+                _ => (y, w - 1 - x),
+            };
+            let (s, d) = ((y * w + x) * 4, (ny * nw + nx) * 4);
+            out[d..d + 4].copy_from_slice(&rgba[s..s + 4]);
+        }
+    }
+    (out, nw as u32, nh as u32)
 }
 
 pub(crate) fn codec_name(c: &CodecConfig) -> String {
@@ -345,7 +395,16 @@ pub(crate) fn codec_name(c: &CodecConfig) -> String {
         CodecConfig::Ac3 { .. } => "AC-3".into(),
         CodecConfig::Eac3 { .. } => "E-AC-3".into(),
         CodecConfig::Timecode(_) => "timecode".into(),
-        CodecConfig::Unknown { fourcc, .. } => format!("{fourcc:?}"),
+        CodecConfig::Unknown { fourcc, .. } => {
+            let code = format!("{fourcc:?}");
+            if code.contains("mp4v") {
+                "MPEG-4 Part 2 (DivX, Xvid)".into()
+            } else if code.contains("s263") || code.contains("h263") {
+                "H.263".into()
+            } else {
+                code
+            }
+        }
     }
 }
 
@@ -387,8 +446,9 @@ impl VideoDecoder {
         let (demux, track, codec) = open_track(&bytes)?;
         Ok(VideoDecoder { bytes, demux, track, codec, next: 0, ready: VecDeque::new(), skip_before: f64::NEG_INFINITY, eos: false, errors: 0 })
     }
+    /// The size the pictures are shown at (after the track's rotation).
     pub fn size(&self) -> (u32, u32) {
-        (self.track.width, self.track.height)
+        if self.track.turns % 2 == 1 { (self.track.height, self.track.width) } else { (self.track.width, self.track.height) }
     }
     pub fn codec(&self) -> &str {
         &self.track.codec
@@ -410,7 +470,8 @@ impl VideoDecoder {
                 if time + 1e-6 < self.skip_before {
                     continue;
                 }
-                return Ok(Some(Frame { time, width: p.width, height: p.height, rgba: p.rgba }));
+                let (rgba, width, height) = turn(p.rgba, p.width, p.height, self.track.turns);
+                return Ok(Some(Frame { time, width, height, rgba }));
             }
             if self.eos {
                 return Ok(None);
@@ -491,4 +552,36 @@ pub fn poster_png(bytes: &Bytes, t: f64) -> Result<Vec<u8>> {
     let mut out = Vec::new();
     image::DynamicImage::ImageRgba8(img).write_to(&mut std::io::Cursor::new(&mut out), image::ImageFormat::Png).map_err(dec_err)?;
     Ok(out)
+}
+
+#[cfg(test)]
+mod tests {
+    /// A phone video filmed upright (stored sideways, `tkhd` turn) shows upright: a 3 × 2
+    /// picture turned a quarter turn clockwise is 2 × 3, the source's bottom-left pixel on the
+    /// top left.
+    #[test]
+    fn frames_turn_with_the_track_rotation() {
+        let rgba: Vec<u8> = (0..6u8).flat_map(|i| [i, 0, 0, 255]).collect();
+        let (out, w, h) = super::turn(rgba.clone(), 3, 2, 1);
+        assert_eq!((w, h), (2, 3));
+        assert_eq!(&out[0..8], &[3, 0, 0, 255, 0, 0, 0, 255]);
+        let (back, w, h) = super::turn(out, 2, 3, 3);
+        assert_eq!((w, h), (3, 2));
+        assert_eq!(back, rgba);
+        let (half, ..) = super::turn(rgba, 3, 2, 2);
+        assert_eq!(half[0], 5);
+    }
+
+    /// H.264 High 10, 4:2:2 and 4:4:4 aren't decoded: the probe says so (the insert then warns)
+    /// instead of showing a black box.
+    #[test]
+    fn h264_profiles_we_cannot_decode_are_named() {
+        for p in [66, 77, 100] {
+            assert!(super::h264_supported(p));
+        }
+        for p in [110, 122, 244, 44] {
+            assert!(!super::h264_supported(p));
+        }
+        assert_eq!(super::h264_name(110), "H.264 High 10 (10 bits)");
+    }
 }

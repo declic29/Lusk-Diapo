@@ -25,6 +25,8 @@ skrifa = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 vello_cpu = { workspace = true, features = ["multithreading"] }
+# SVG pictures (Insert › Pictures, drag and drop), drawn with the computer's fonts for their text.
+resvg = { version = "0.50.0", default-features = false, features = ["text", "system-fonts", "raster-images"] }
 
 [dev-dependencies]
 craft-metafile = { workspace = true, features = ["write"] }

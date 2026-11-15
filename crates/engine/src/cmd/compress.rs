@@ -54,7 +54,8 @@ fn decode(data: &[u8], format: image::ImageFormat) -> Option<image::DynamicImage
     limits.max_image_height = Some(h);
     limits.max_alloc = Some(MAX_DECODE_BYTES);
     reader.limits(limits);
-    reader.decode().ok()
+    // Upright, as shown: the re-encoded picture carries no EXIF orientation.
+    reader.decode().ok().map(|img| deckcraft_render::orient_image(data, img))
 }
 
 /// Compress `data` for a picture shown `w_pt` × `h_pt` with `crop`, at `ppi`. `None` when the

@@ -132,6 +132,10 @@ fn decode_at(bytes: &[u8], side: u32) -> Option<image::RgbaImage> {
     if crate::metafile::is_metafile(bytes) {
         return crate::metafile::rasterize(bytes, side);
     }
+    #[cfg(not(target_arch = "wasm32"))]
+    if crate::svg::is_svg(bytes) {
+        return crate::svg::rasterize(bytes, side);
+    }
     decode_raster(bytes, MAX_RGBA)
 }
 
@@ -165,17 +169,53 @@ fn fits(w: u32, h: u32, max: u64) -> bool {
 /// Decode a raster picture to RGBA, refusing (before decoding, by its header, and again before
 /// the RGBA conversion) any whose RGBA would exceed `max` bytes.
 fn decode_raster(bytes: &[u8], max: u64) -> Option<image::RgbaImage> {
+    use image::ImageDecoder as _;
     let reader = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?;
     if let Ok((w, h)) = reader.into_dimensions()
         && !fits(w, h, max)
     {
         return None;
     }
-    let img = image::load_from_memory(bytes).ok()?;
+    let mut decoder = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?.into_decoder().ok()?;
+    // A photo taken with the phone upright is stored sideways with an EXIF orientation: show it
+    // the way it was taken, as PowerPoint and the photo viewers do.
+    let orientation = decoder.orientation().unwrap_or(image::metadata::Orientation::NoTransforms);
+    let mut img = image::DynamicImage::from_decoder(decoder).ok()?;
     if !fits(img.width(), img.height(), max) {
         return None;
     }
+    img.apply_orientation(orientation);
     Some(img.to_rgba8())
+}
+
+/// `img`, decoded from `bytes` without its EXIF orientation, turned the way `bytes` says it is
+/// shown (see [`decode`]); for code that decodes a picture itself to change it.
+pub fn orient(bytes: &[u8], mut img: image::DynamicImage) -> image::DynamicImage {
+    use image::ImageDecoder as _;
+    let orientation = image::ImageReader::new(std::io::Cursor::new(bytes))
+        .with_guessed_format()
+        .ok()
+        .and_then(|r| r.into_decoder().ok())
+        .and_then(|mut d| d.orientation().ok());
+    if let Some(o) = orientation {
+        img.apply_orientation(o);
+    }
+    img
+}
+
+/// The pixel size of a raster picture as it is shown: its header's size, across and down swapped
+/// when its EXIF orientation turns it a quarter turn (a phone photo taken upright).
+pub fn oriented_size(bytes: &[u8]) -> Option<(u32, u32)> {
+    use image::ImageDecoder as _;
+    #[cfg(not(target_arch = "wasm32"))]
+    if crate::svg::is_svg(bytes) {
+        return crate::svg::size(bytes).map(|(w, h)| (w.round().max(1.0) as u32, h.round().max(1.0) as u32));
+    }
+    use image::metadata::Orientation as O;
+    let mut decoder = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?.into_decoder().ok()?;
+    let (w, h) = decoder.dimensions();
+    let turned = matches!(decoder.orientation(), Ok(O::Rotate90 | O::Rotate270 | O::Rotate90FlipH | O::Rotate270FlipH));
+    Some(if turned { (h, w) } else { (w, h) })
 }
 
 /// A raster picture's own size in 96-dpi pixels (so 0.75 pt each), read from its header: its
@@ -185,7 +225,7 @@ pub fn natural_size(bytes: &[u8]) -> Option<(f64, f64)> {
     if crate::metafile::is_metafile(bytes) {
         return None;
     }
-    let (w, h) = image::ImageReader::new(std::io::Cursor::new(bytes)).with_guessed_format().ok()?.into_dimensions().ok()?;
+    let (w, h) = oriented_size(bytes)?;
     if w == 0 || h == 0 {
         return None;
     }

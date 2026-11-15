@@ -148,6 +148,7 @@ fn remove_background(s: &mut Session, p: &Value) -> Result<Value> {
                 return Err(bad("picture.removeBackground", format!("{iw}×{ih} pixels is too large; compress the picture first")));
             }
             let Ok(dynimg) = image::load_from_memory(&item.data) else { continue };
+            let dynimg = deckcraft_render::orient_image(&item.data, dynimg);
             let mut img = dynimg.to_rgba8();
             if matte(&mut img, tolerance) == 0 {
                 continue;

@@ -83,6 +83,10 @@ Code dependencies
 - The H.264, HEVC, VP9 and AV1 crates under crates/ are ported from FilmCraft (same owner,
   MIT OR Apache-2.0). The Opus decoder (craft-audio) and the MP4, Matroska and Ogg demuxers
   (craft-media) come from craft-libs (same owner, MIT OR Apache-2.0).
+- resvg and usvg 0.50 (https://github.com/linebender/resvg, Apache-2.0 OR MIT) draw SVG pictures,
+  with tiny-skia 0.12 (https://github.com/linebender/tiny-skia), BSD-3-Clause, Copyright (c)
+  2011 Google Inc. and 2020 Yevhenii Reizner; its full licence text, conditions and disclaimer
+  are in licenses/tiny-skia/LICENSE.
 
 - Krilla 0.8.2 (https://github.com/LaurenzV/krilla) is used through craft-pdf under
   MIT OR Apache-2.0. craft-libs vendors that version with page/surface unwind recovery

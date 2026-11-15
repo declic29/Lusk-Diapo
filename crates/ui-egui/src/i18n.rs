@@ -85,6 +85,84 @@ pub fn trf(s: &str, args: &[&dyn std::fmt::Display]) -> String {
     out
 }
 
+/// Les messages du moteur qui contiennent des valeurs (un nom de fichier, un format) : le modèle
+/// anglais, avec `{0}`, `{1}`… à la place des valeurs, et sa traduction.
+const PATTERNS: &[(&str, &str)] = &[
+    (
+        "{0} was inserted, but its video can't be played ({1} isn't supported yet); only the audio plays",
+        "{0} a été insérée, mais son image ne peut pas être lue ({1} n'est pas encore pris en charge) : seul le son sera joué",
+    ),
+    (
+        "{0} was inserted, but it can't be played ({1} isn't supported yet)",
+        "{0} a été inséré, mais ne peut pas être lu ({1} n'est pas encore pris en charge)",
+    ),
+    ("{0} was inserted, but it can't be played ({1})", "{0} a été inséré, mais ne peut pas être lu ({1})"),
+    (
+        "invalid parameters for `insert.picture`: {0} is not a picture",
+        "{0} n'est pas une image que Lusk Diapo sait lire (JPEG, PNG, GIF, WebP, BMP, TIFF, SVG, EMF ou WMF)",
+    ),
+    (
+        "invalid parameters for `insert.video`: {0} is not a supported video ({1})",
+        "{0} n'est pas une vidéo que Lusk Diapo sait lire (MP4, MOV, M4V, WebM ou MKV)",
+    ),
+    ("invalid parameters for `insert.video`: {0} has no video", "{0} ne contient pas d'image vidéo"),
+    (
+        "invalid parameters for `insert.audio`: {0} is not a supported audio file ({1})",
+        "{0} n'est pas un fichier audio que Lusk Diapo sait lire (MP3, M4A, AAC, WAV, FLAC, OGG, Opus, AIFF…)",
+    ),
+    ("invalid parameters for `insert.audio`: {0} has no audio", "{0} ne contient pas de son"),
+    ("{0}: the picture can't be read", "{0} : l'image ne peut pas être lue"),
+];
+
+/// Les valeurs de `s` si `s` suit le modèle `template` (`{0}`, `{1}`… dans l'ordre).
+fn match_template(template: &str, s: &str) -> Option<Vec<String>> {
+    let mut parts = Vec::new();
+    let mut rest = template;
+    while let Some(i) = rest.find('{') {
+        let j = rest[i..].find('}')? + i;
+        parts.push(&rest[..i]);
+        rest = &rest[j + 1..];
+    }
+    let mut text = s.strip_prefix(parts.first().copied().unwrap_or(rest))?;
+    if parts.is_empty() {
+        return text.is_empty().then(Vec::new);
+    }
+    let mut values = Vec::new();
+    for lit in parts.iter().skip(1).copied().chain(std::iter::once(rest)) {
+        if lit.is_empty() {
+            values.push(text.to_string());
+            text = "";
+            continue;
+        }
+        // La dernière occurrence pour la fin du message, la première sinon.
+        let k = if std::ptr::eq(lit, rest) { text.rfind(lit)? } else { text.find(lit)? };
+        values.push(text[..k].to_string());
+        text = &text[k + lit.len()..];
+    }
+    text.is_empty().then_some(values)
+}
+
+/// Un message (du moteur, d'une erreur) dans la langue de l'interface : la table d'abord, puis
+/// les modèles avec des valeurs ([`PATTERNS`]).
+pub fn tr_message(s: &str) -> String {
+    if !french() {
+        return s.to_string();
+    }
+    if let Some(t) = table().get(s) {
+        return t.clone();
+    }
+    for (en, fr) in PATTERNS {
+        if let Some(values) = match_template(en, s) {
+            let mut out = (*fr).to_string();
+            for (i, v) in values.iter().enumerate() {
+                out = out.replace(&format!("{{{i}}}"), v);
+            }
+            return out;
+        }
+    }
+    s.to_string()
+}
+
 /// Nombre de textes de la table (pour les tests).
 pub fn len() -> usize {
     table().len()
@@ -124,6 +202,24 @@ mod tests {
                 assert!(parts[1].contains(&format!("{{{w}}}")), "ligne {} : {{{w}}} manque dans « {} »", n + 1, parts[1]);
             }
         }
+    }
+
+    #[test]
+    fn engine_messages_with_values_are_translated() {
+        set_french_on_this_thread(Some(true));
+        assert_eq!(
+            tr_message("clip.mov was inserted, but its video can't be played (Apple ProRes isn't supported yet); only the audio plays"),
+            "clip.mov a été insérée, mais son image ne peut pas être lue (Apple ProRes n'est pas encore pris en charge) : seul le son sera joué"
+        );
+        assert_eq!(
+            tr_message("invalid parameters for `insert.picture`: photo (1).heic is not a picture"),
+            "photo (1).heic n'est pas une image que Lusk Diapo sait lire (JPEG, PNG, GIF, WebP, BMP, TIFF, SVG, EMF ou WMF)"
+        );
+        assert_eq!(tr_message("Paste"), "Coller");
+        assert_eq!(tr_message("something else"), "something else");
+        set_french_on_this_thread(Some(false));
+        assert_eq!(tr_message("Paste"), "Paste");
+        set_french_on_this_thread(None);
     }
 
     #[test]

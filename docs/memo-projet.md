@@ -89,6 +89,24 @@
     `declic29/Lusk-Diapo`.
   - Reste : la capture d'écran de `bzh.lusk.diapo.metainfo.xml.in` est encore celle de DeckCraft ;
     Flatpak et FreeBSD, hors publication, gardent les noms de DeckCraft.
+- 15 novembre 2026, **vérification des images, sons et vidéos** (90 fichiers d'essai fabriqués
+  avec ffmpeg et ImageMagick, insérés, décodés, rendus, enregistrés en PPTX et .deckcraft puis
+  rouverts). Corrigé :
+  - les photos prises en portrait avec un téléphone (orientation EXIF) s'affichaient couchées ;
+    elles sont redressées partout (affichage, taille à l'insertion, album photo, compression,
+    effets artistiques, suppression de l'arrière-plan) : `deckcraft_render::oriented_size` et
+    `orient_image` ;
+  - les vidéos filmées en portrait (rotation de la piste MP4/MOV) s'affichaient couchées ; elles
+    sont redressées (`turn` dans `crates/media/src/video.rs`, taille inversée dans la sonde) ;
+  - les images SVG s'affichaient comme une croix : elles sont dessinées avec resvg
+    (`crates/render/src/svg.rs`, licence de tiny-skia dans `licenses/tiny-skia/`) ; EMF et WMF
+    sont reconnus à l'insertion ; Insertion › Images propose aussi .svg, .emf, .wmf et .jfif ;
+  - les vidéos H.264 10 bits, 4:2:2 ou 4:4:4 et l'ALAC dans un .caf restaient noires ou muettes
+    sans rien dire : un message l'explique désormais ;
+  - les messages d'insertion du moteur (format non pris en charge, vidéo dont seul le son est lu)
+    sont traduits (`i18n::tr_message`).
+  Restent non lus (avec un message) : vidéos MPEG-4 Part 2/DivX, Motion JPEG, ProRes, VP8,
+  H.263 (.3gp), WMV/WMA ; refusés : .avi, .mpg, .ac3, .ico, .avif, .heic.
 
 ## À faire (dans l'ordre du cahier des charges)
 

@@ -1024,3 +1024,51 @@ fn many_point_fills_and_sparse_scatter_x_render() {
     let img = render(vec![shape(2, bars), shape(3, scatter)]);
     assert!(img.width > 0);
 }
+
+/// A JPEG `w` × `h`, left half red and right half blue, with an EXIF orientation tag.
+fn jpeg_with_orientation(w: u32, h: u32, orientation: u16) -> Vec<u8> {
+    let img = image::RgbImage::from_fn(w, h, |x, _| if x < w / 2 { image::Rgb([255, 0, 0]) } else { image::Rgb([0, 0, 255]) });
+    let mut plain = Vec::new();
+    image::codecs::jpeg::JpegEncoder::new_with_quality(&mut plain, 95).encode_image(&img).unwrap();
+    // APP1 "Exif\0\0", little-endian TIFF header, one IFD entry: Orientation (0x0112), SHORT.
+    let mut tiff = b"II*\0\x08\0\0\0\x01\0\x12\x01\x03\0\x01\0\0\0".to_vec();
+    tiff.extend_from_slice(&orientation.to_le_bytes());
+    tiff.extend_from_slice(&[0, 0, 0, 0, 0, 0]);
+    let mut app1 = b"Exif\0\0".to_vec();
+    app1.extend_from_slice(&tiff);
+    let mut out = vec![0xFF, 0xD8, 0xFF, 0xE1];
+    out.extend_from_slice(&((app1.len() + 2) as u16).to_be_bytes());
+    out.extend_from_slice(&app1);
+    out.extend_from_slice(&plain[2..]);
+    out
+}
+
+/// A phone photo taken upright is stored sideways with EXIF orientation 6 (turn 90° clockwise):
+/// it is shown, sized and laid out upright, red (the stored left) on top.
+#[test]
+fn exif_orientation_turns_photos_upright() {
+    let jpeg = jpeg_with_orientation(16, 8, 6);
+    assert_eq!(crate::oriented_size(&jpeg), Some((8, 16)));
+    assert_eq!(images::natural_size(&jpeg), Some((8.0, 16.0)));
+    let img = crate::decode_image(&jpeg).unwrap();
+    assert_eq!(img.dimensions(), (8, 16));
+    let top = img.get_pixel(4, 2).0;
+    let bottom = img.get_pixel(4, 13).0;
+    assert!(top[0] > 200 && top[2] < 60, "top {top:?}");
+    assert!(bottom[2] > 200 && bottom[0] < 60, "bottom {bottom:?}");
+    // No tag, or orientation 1: as stored.
+    assert_eq!(crate::oriented_size(&jpeg_with_orientation(16, 8, 1)), Some((16, 8)));
+}
+
+/// SVG pictures are drawn (a logo, an icon), at their own size.
+#[test]
+fn svg_pictures_are_drawn() {
+    let svg = br##"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><rect width="100" height="100" fill="#ff0000"/><rect x="100" width="100" height="100" fill="#0000ff"/></svg>"##;
+    assert_eq!(crate::oriented_size(svg), Some((200, 100)));
+    assert_eq!(images::natural_size(svg), Some((200.0, 100.0)));
+    let img = crate::decode_image(svg).unwrap();
+    let (w, h) = img.dimensions();
+    assert!(w > h && w >= 200, "{w}×{h}");
+    assert_eq!(img.get_pixel(w / 4, h / 2).0, [255, 0, 0, 255]);
+    assert_eq!(img.get_pixel(w * 3 / 4, h / 2).0, [0, 0, 255, 255]);
+}
