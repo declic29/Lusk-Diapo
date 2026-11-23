@@ -120,6 +120,12 @@
   plus ». Dictionnaire des synonymes : il n'avait qu'une petite liste anglaise ; il a maintenant le
   dictionnaire des synonymes français de Dicollecte (LGPL, 36 000 mots, `licenses/thes_fr/`), qui
   retrouve aussi les pluriels, féminins, élisions et quelques formes de verbes ; volet redessiné.
+- 23 novembre 2026, version 1.0.1, **mise à jour automatique sans signature** : le module de mise
+  à jour est copié dans `vendor/craft-update` (voir son `LISEZ-MOI.md`). Sous Windows, une copie
+  non signée se met maintenant à jour elle-même (fichier de la Release GitHub, empreinte SHA-256
+  vérifiée) au lieu de proposer seulement « Télécharger », et l'éditeur « Lusk » de
+  l'installateur est reconnu. Les copies déjà installées (versions précédentes) ont encore
+  l'ancien module : cette version-là s'installe une fois à la main, les suivantes se font seules.
 
 ## À faire (dans l'ordre du cahier des charges)
 
