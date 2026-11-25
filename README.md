@@ -1,22 +1,35 @@
 <p align="center">
-  <img src="assets/app-icon/lusk-diapo-logo.png" width="320" alt="Logo de Lusk Diapo : trois cartes empilées rose, violette et turquoise, et le mot Diapo en dégradé">
+  <img src="docs/fiche/banniere.jpg" alt="Lusk Diapo : vos présentations vous appartiennent.">
 </p>
 
-<h1 align="center">Lusk Diapo</h1>
+<h3 align="center">Vos présentations vous appartiennent.</h3>
 
 <p align="center">
-  <b>Vos présentations vous appartiennent.</b><br>
-  Un logiciel de présentation libre et gratuit, porté par l'association Lusk (loi 1901).
+  Un logiciel de présentation libre et gratuit, porté par l'association Lusk (loi 1901).<br>
+  Pour Windows, macOS et Linux. Sans compte, sans publicité, et vos fichiers restent chez vous.
+</p>
+
+<p align="center">
+  <a href="https://github.com/declic29/Lusk-Diapo/releases/latest/download/Lusk-Diapo-Windows.msi"><img src="https://img.shields.io/badge/Windows-T%C3%A9l%C3%A9charger-1e7be0?style=for-the-badge" alt="Télécharger pour Windows"></a>
+  <a href="https://github.com/declic29/Lusk-Diapo/releases/latest/download/Lusk-Diapo-Mac.dmg"><img src="https://img.shields.io/badge/macOS-T%C3%A9l%C3%A9charger-0d2b52?style=for-the-badge&logo=apple&logoColor=white" alt="Télécharger pour macOS"></a>
+  <a href="https://github.com/declic29/Lusk-Diapo/releases/latest/download/Lusk-Diapo-Linux.deb"><img src="https://img.shields.io/badge/Linux-T%C3%A9l%C3%A9charger-f7941d?style=for-the-badge&logo=linux&logoColor=white" alt="Télécharger pour Linux"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/declic29/Lusk-Diapo/releases/latest"><img src="https://img.shields.io/github/v/release/declic29/Lusk-Diapo?label=version&color=1e7be0" alt="Dernière version"></a>
+  <img src="https://img.shields.io/badge/prix-gratuit-2e9e5b" alt="Gratuit">
+  <img src="https://img.shields.io/badge/langue-fran%C3%A7ais-0d2b52" alt="En français">
+  <a href="https://www.lusk.bzh"><img src="https://img.shields.io/badge/lusk.bzh-site-f7941d" alt="lusk.bzh"></a>
 </p>
 
 <p align="center">
   <a href="https://www.lusk.bzh"><b>lusk.bzh</b></a> ·
-  <a href="https://github.com/declic29/Lusk-Diapo/releases/latest">Télécharger</a> ·
+  <a href="https://github.com/declic29/Lusk-Diapo/releases">Toutes les versions</a> ·
+  <a href="https://github.com/declic29/LuskOffice">Toute la suite avec Lusk Office</a> ·
   <a href="https://github.com/declic29/Lusk-Diapo/issues">Signaler un problème</a>
 </p>
 
-> Lusk Diapo est en cours de préparation : la première version publique sera la 1.0.0. Les liens
-> de téléchargement ci-dessous fonctionneront dès sa publication.
+---
 
 ## Lusk Diapo en bref
 
@@ -59,8 +72,9 @@ droits d'administrateur, dans `%LOCALAPPDATA%\Programs\Lusk\Lusk Diapo`) ou « P
 utilisateurs de cet ordinateur » (dans `C:\Program Files\Lusk\Lusk Diapo`, avec l'accord d'un
 administrateur), puis un raccourci sur le Bureau (case cochée au départ).
 
-**macOS.** Ouvrez le `.dmg` et glissez Lusk Diapo dans Applications. La première fois, faites un
-clic droit sur l'application puis **Ouvrir**.
+**macOS.** Ouvrez le `.dmg` et glissez Lusk Diapo dans Applications. L'application n'a pas de
+certificat Apple : la première fois, macOS la bloque ; ouvrez **Réglages Système › Confidentialité
+et sécurité**, puis cliquez sur **Ouvrir quand même**.
 
 **Linux.** Rendez l'AppImage exécutable (`chmod +x`) puis lancez-la, ou installez le paquet de
 votre distribution.
@@ -77,6 +91,23 @@ votre distribution.
 - Le **journal** se trouve dans `%APPDATA%\Lusk Diapo\logs\` (Windows),
   `~/Library/Application Support/Lusk Diapo/logs/` (macOS) ou `~/.config/deckcraft/logs/` (Linux).
   Joignez-le à un signalement de problème.
+
+## La suite Lusk
+
+Lusk Diapo fait partie de la suite libre et gratuite de l'association Lusk. Avec
+**[Lusk Office](https://github.com/declic29/LuskOffice)**, un seul programme installe d'un coup les logiciels que vous cochez
+(Windows, Linux et Mac).
+
+<table>
+  <tr>
+    <td width="50%"><a href="https://github.com/declic29/LuskTX"><img src="https://raw.githubusercontent.com/declic29/LuskOffice/main/docs/lusk-texte.jpg" alt="Lusk Texte"></a></td>
+    <td width="50%"><a href="https://github.com/declic29/LuskTab"><img src="https://raw.githubusercontent.com/declic29/LuskOffice/main/docs/lusk-tab.jpg" alt="Lusk Tab"></a></td>
+  </tr>
+  <tr>
+    <td width="50%"><a href="https://github.com/declic29/Lusk_Pdf"><img src="https://raw.githubusercontent.com/declic29/LuskOffice/main/docs/lusk-pdf.jpg" alt="Lusk PDF"></a></td>
+    <td width="50%"><a href="https://www.lusk.bzh"><img src="https://raw.githubusercontent.com/declic29/LuskOffice/main/docs/lusk-bzh.jpg" alt="Lusk.bzh"></a></td>
+  </tr>
+</table>
 
 ## Compiler Lusk Diapo
 
